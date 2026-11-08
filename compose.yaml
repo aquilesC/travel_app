@@ -1,0 +1,37 @@
+name: travel_app
+
+services:
+  db:
+    image: postgres:18-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-trips}
+      POSTGRES_USER: ${POSTGRES_USER:-trips}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}
+    volumes:
+      # Postgres 18+ images keep data under /var/lib/postgresql/<version>/
+      - postgres_data:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  web:
+    build: .
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      DATABASE_URL: postgres://${POSTGRES_USER:-trips}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-trips}
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      # Only reachable from this machine; the public route is the Cloudflare tunnel.
+      - "127.0.0.1:${WEB_PORT:-8000}:8000"
+    volumes:
+      - media:/app/media
+
+volumes:
+  postgres_data:
+  media:
