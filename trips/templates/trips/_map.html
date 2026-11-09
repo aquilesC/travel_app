@@ -1,0 +1,5 @@
+{% load static %}
+<div id="trip-map" class="map" data-url="{{ map_url }}" aria-label="Map of the trip"></div>
+<link rel="stylesheet" href="https://unpkg.com/maplibre-gl@5.6.0/dist/maplibre-gl.css">
+<script src="https://unpkg.com/maplibre-gl@5.6.0/dist/maplibre-gl.js" defer></script>
+<script src="{% static 'js/trip-map.js' %}" defer></script>

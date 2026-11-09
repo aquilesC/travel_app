@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% load static trips_tags %}
+{% block title %}{% if entry %}Edit entry{% else %}New entry{% endif %} · {{ trip.title }}{% endblock %}
+{% block content %}
+<section class="narrow">
+  <p><a href="{{ trip.get_absolute_url }}">← {{ trip.title }}</a></p>
+  <h1>{% if entry %}Edit entry{% else %}New entry{% endif %}</h1>
+
+  <form method="post">
+    {% csrf_token %}
+    {{ form.as_div }}
+    <p class="muted">Text uses Markdown: **bold**, *italic*, [link](https://…), - lists.</p>
+    {% if preview is not None %}
+    <div class="card preview"><h3>Preview</h3>{{ preview|safe }}</div>
+    {% endif %}
+    <button type="submit" name="preview" value="1">Preview</button>
+    <button type="submit" class="primary">Save</button>
+  </form>
+
+  {% if entry %}
+  <hr>
+  <h2>Photos, videos & audio</h2>
+  <p class="muted">Full-resolution originals are kept. Items marked “travel copy” came from WhatsApp in reduced quality; upload the original and remove the copy.</p>
+  <ul class="media-list" id="media-list" data-status-url="{% url 'media_status' entry.pk %}">
+    {% for m in entry.media.all %}
+    <li data-status="{{ m.status }}">
+      <span class="thumb">
+        {% if m.status == "ready" and m.kind == "photo" %}<img src="{% media_url m 'sm' %}" alt="">
+        {% elif m.status == "ready" and m.kind == "video" %}<img src="{% media_url m 'poster' %}" alt="">
+        {% else %}{{ m.kind }}{% endif %}
+      </span>
+      <span class="info">
+        {{ m.original_name|default:m.kind }}
+        {% if m.is_travel_copy %}<span class="badge">travel copy</span>{% endif %}
+        <span class="badge status-{{ m.status }}">{{ m.get_status_display }}</span>
+        {% if m.error %}<small class="error">{{ m.error|truncatechars:200 }}</small>{% endif %}
+        {% if trip.cover_id == m.pk %}<span class="badge">trip cover</span>{% endif %}
+      </span>
+      <span class="actions">
+        <form method="post" action="{% url 'media_move' m.pk 'up' %}" class="inline">{% csrf_token %}<button title="Move up">↑</button></form>
+        <form method="post" action="{% url 'media_move' m.pk 'down' %}" class="inline">{% csrf_token %}<button title="Move down">↓</button></form>
+        {% if m.kind == "photo" and m.status == "ready" %}<form method="post" action="{% url 'media_cover' m.pk %}" class="inline">{% csrf_token %}<button>Cover</button></form>{% endif %}
+        {% if m.status == "failed" %}<form method="post" action="{% url 'media_retry' m.pk %}" class="inline">{% csrf_token %}<button>Retry</button></form>{% endif %}
+        <a href="{% url 'serve_media' m.pk 'original' %}">Original</a>
+        <form method="post" action="{% url 'media_delete' m.pk %}" class="inline" onsubmit="return confirm('Remove this file?')">{% csrf_token %}<button class="danger">Remove</button></form>
+      </span>
+    </li>
+    {% empty %}
+    <li class="muted">Nothing attached yet.</li>
+    {% endfor %}
+  </ul>
+
+  <div class="card uploader" id="uploader" data-start-url="{% url 'upload_start' entry.pk %}">
+    <label>Add files <input type="file" multiple accept="image/*,video/*,audio/*,.heic,.heif"></label>
+    <ul class="upload-progress plain"></ul>
+  </div>
+
+  <hr>
+  <p><a class="danger" href="{% url 'entry_delete' entry.pk %}">Delete this entry</a></p>
+  {% endif %}
+</section>
+{% endblock %}
+{% block scripts %}{% if entry %}<script src="{% static 'js/upload.js' %}" defer></script>{% endif %}{% endblock %}

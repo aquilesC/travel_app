@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% load trips_tags %}
+{% block content %}
+{% if unrouted %}
+<section class="card warn">
+  <h2>WhatsApp messages without a trip</h2>
+  <p>These arrived on days with no active trip. Pick a trip to add them to.</p>
+  <ul class="plain">
+  {% for message in unrouted %}
+    <li>
+      <strong>{{ message.received_at|date:"j M Y H:i" }}</strong>
+      {{ message.payload.Body|default:"(media or location)"|truncatechars:80 }}
+      <form method="post" action="{% url 'inbound_assign' message.pk %}" class="inline">
+        {% csrf_token %}{{ assign_form.trip }} <button>Add</button>
+      </form>
+    </li>
+  {% endfor %}
+  </ul>
+</section>
+{% endif %}
+
+<h1>Our trips</h1>
+{% if not trips %}<p>No trips yet. <a href="{% url 'trip_create' %}">Create the first one</a>.</p>{% endif %}
+<ul class="trip-grid">
+{% for trip in trips %}
+  <li>
+    <a href="{{ trip.get_absolute_url }}" class="trip-card">
+      {% if trip.cover and trip.cover.status == "ready" %}<img src="{% media_url trip.cover 'md' %}" alt="" loading="lazy">{% endif %}
+      <span class="title">{{ trip.title }}</span>
+      <span class="muted">{{ trip.start_date|date:"j M Y" }} – {{ trip.end_date|date:"j M Y" }}</span>
+      {% if trip.companions.all %}<span class="muted">with {{ trip.companions.all|join:", " }}</span>{% endif %}
+    </a>
+  </li>
+{% endfor %}
+</ul>
+{% endblock %}

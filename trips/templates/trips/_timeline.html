@@ -1,0 +1,58 @@
+{% load trips_tags %}
+{% for chapter, entries in timeline %}
+<section class="chapter" {% if chapter %}id="chapter-{{ chapter.pk }}"{% endif %}>
+  {% if chapter %}
+  <header class="chapter-head">
+    <h2>{{ chapter.title }}</h2>
+    {% if not share_token %}
+    <div class="actions">
+      <form method="post" action="{% url 'chapter_move' chapter.pk 'up' %}" class="inline">{% csrf_token %}<button title="Move up">↑</button></form>
+      <form method="post" action="{% url 'chapter_move' chapter.pk 'down' %}" class="inline">{% csrf_token %}<button title="Move down">↓</button></form>
+      <a href="{% url 'chapter_edit' chapter.pk %}">Rename</a>
+      <a href="{% url 'chapter_delete' chapter.pk %}">Delete</a>
+      <a href="{% url 'entry_create' trip.pk %}?chapter={{ chapter.pk }}">+ Entry</a>
+    </div>
+    {% endif %}
+  </header>
+  {% endif %}
+
+  {% for entry in entries %}
+  <article class="entry{% if not entry.is_public %} private{% endif %}" id="entry-{{ entry.pk }}">
+    <header>
+      <time datetime="{{ entry.occurred_at|date:'c' }}">{{ entry.occurred_at|date:"D j M Y, H:i" }}</time>
+      {% if entry.place_name %}<span class="place">📍 {{ entry.place_name }}</span>
+      {% elif entry.has_location %}<span class="place">📍 {{ entry.latitude|floatformat:4 }}, {{ entry.longitude|floatformat:4 }}</span>{% endif %}
+      {% if not share_token %}
+        {% if not entry.is_public %}<span class="badge">private</span>{% endif %}
+        {% if entry.source == "whatsapp" %}<span class="badge">WhatsApp</span>{% endif %}
+        <a class="edit" href="{% url 'entry_edit' entry.pk %}">Edit</a>
+      {% endif %}
+    </header>
+    {% if entry.body %}<div class="body">{{ entry.body|markdown }}</div>{% endif %}
+    {% with items=entry.media.all %}
+    {% if items %}
+    <div class="gallery">
+      {% for m in items %}
+        {% if m.status == "ready" %}
+          {% if m.kind == "photo" %}
+            <a href="{% media_url m 'lg' %}" target="_blank" rel="noopener"><img src="{% media_url m 'md' %}" alt="" loading="lazy" {% if m.width %}width="{{ m.width }}" height="{{ m.height }}"{% endif %}></a>
+          {% elif m.kind == "video" %}
+            <video controls preload="none" playsinline poster="{% media_url m 'poster' %}" src="{% media_url m 'mp4' %}"></video>
+          {% else %}
+            <audio controls preload="none" src="{% media_url m 'audio' %}"></audio>
+          {% endif %}
+        {% elif not share_token %}
+          <div class="placeholder">{% if m.status == "failed" %}⚠ {{ m.kind }} failed{% else %}{{ m.kind }} processing…{% endif %}</div>
+        {% endif %}
+      {% endfor %}
+    </div>
+    {% endif %}
+    {% endwith %}
+  </article>
+  {% empty %}
+    {% if not share_token %}<p class="muted">No entries in this chapter yet.</p>{% endif %}
+  {% endfor %}
+</section>
+{% empty %}
+<p class="muted">Nothing here yet.</p>
+{% endfor %}

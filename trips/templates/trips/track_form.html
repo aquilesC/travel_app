@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block title %}{% if track %}Edit track{% else %}Add GPX track{% endif %}{% endblock %}
+{% block content %}
+<section class="narrow">
+  <p><a href="{{ trip.get_absolute_url }}">← {{ trip.title }}</a></p>
+  <h1>{% if track %}Edit track{% else %}Add GPX track{% endif %}</h1>
+  <form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    {{ form.as_div }}
+    {% if track %}<p class="muted">Leave the file empty to keep the current GPX.</p>{% endif %}
+    <button type="submit" class="primary">Save</button>
+    <a href="{{ trip.get_absolute_url }}">Cancel</a>
+  </form>
+</section>
+{% endblock %}

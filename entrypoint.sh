@@ -1,9 +1,12 @@
 #!/bin/sh
-# Runs on every container start: apply migrations and collect static files,
-# then hand over to the CMD (gunicorn by default).
+# Only the web container prepares the database and static files
+# (RUN_MIGRATIONS=1); worker and scheduler just wait for it and start.
 set -e
 
-python manage.py migrate --noinput
-python manage.py collectstatic --noinput
+if [ "${RUN_MIGRATIONS:-0}" = "1" ]; then
+    python manage.py migrate --noinput
+    python manage.py createcachetable
+    python manage.py collectstatic --noinput
+fi
 
 exec "$@"

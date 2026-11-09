@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block meta %}<meta name="robots" content="noindex, nofollow">{% endblock %}
+{% block title %}Unsubscribe{% endblock %}
+{% block content %}
+<section class="narrow">
+  <h1>{{ subscriber.trip.title }}</h1>
+  {% if done or subscriber.unsubscribed_at %}
+    <p class="ok">{{ subscriber.email }} won't get any more emails about this trip.</p>
+  {% else %}
+    <p>Stop emails to {{ subscriber.email }} about this trip?</p>
+    <form method="post">{% csrf_token %}<button type="submit" class="primary">Unsubscribe</button></form>
+  {% endif %}
+</section>
+{% endblock %}

@@ -1,0 +1,8 @@
+Hi,
+
+Someone (hopefully you) asked to get updates from "{{ trip.title }}".
+
+Confirm here:
+{{ confirm_url }}
+
+If this wasn't you, ignore this email and nothing will happen.

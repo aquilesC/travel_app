@@ -1,0 +1,12 @@
+{% load trips_tags %}<div style="font-family:Georgia,serif;max-width:600px;margin:auto;color:#222">
+<h1 style="font-size:22px">News from {{ trip.title }}</h1>
+{% if thumbnails %}<p>{% for url in thumbnails %}<img src="{{ url }}" alt="" width="180" style="margin:2px;border-radius:4px">{% endfor %}</p>{% endif %}
+{% for entry in entries %}
+<div style="border-top:1px solid #ddd;padding:12px 0">
+  <p style="color:#666;margin:0 0 6px">{{ entry.occurred_at|date:"D j M, H:i" }}{% if entry.place_name %} · {{ entry.place_name }}{% endif %}</p>
+  {% if entry.body %}<div>{{ entry.body|truncatewords:80|markdown }}</div>{% endif %}
+</div>
+{% endfor %}
+<p><a href="{{ share_url }}" style="font-size:18px">See the whole trip →</a></p>
+<p style="color:#888;font-size:12px">You get this because you subscribed to {{ trip.title }}. <a href="{{ unsubscribe_url }}">Unsubscribe</a>.</p>
+</div>

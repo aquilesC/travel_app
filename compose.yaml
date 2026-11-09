@@ -1,5 +1,15 @@
 name: travel_app
 
+x-app: &app
+  build: .
+  image: travel_app
+  restart: unless-stopped
+  env_file: .env
+  environment:
+    DATABASE_URL: postgres://${POSTGRES_USER:-trips}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-trips}
+  volumes:
+    - media:/app/media
+
 services:
   db:
     image: postgres:18-alpine
@@ -18,19 +28,50 @@ services:
       retries: 10
 
   web:
-    build: .
-    restart: unless-stopped
-    env_file: .env
+    <<: *app
     environment:
       DATABASE_URL: postgres://${POSTGRES_USER:-trips}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-trips}
+      RUN_MIGRATIONS: "1"
     depends_on:
       db:
         condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/healthz/')"]
+      interval: 10s
+      timeout: 5s
+      start_period: 60s
+      retries: 5
+
+  # Runs background tasks (media processing, WhatsApp ingest, emails, backups).
+  worker:
+    <<: *app
+    command: ["python", "manage.py", "db_worker", "--interval", "1"]
+    depends_on:
+      web:
+        condition: service_healthy
+
+  # Enqueues the periodic tasks (nightly backup, daily digest).
+  scheduler:
+    <<: *app
+    command: ["python", "manage.py", "run_scheduler"]
+    depends_on:
+      web:
+        condition: service_healthy
+
+  # Front door: proxies to gunicorn and serves media files after Django has
+  # authorised them (X-Accel-Redirect).
+  nginx:
+    image: nginx:1.29-alpine
+    restart: unless-stopped
+    volumes:
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+      - media:/app/media:ro
+    depends_on:
+      web:
+        condition: service_healthy
     ports:
       # Only reachable from this machine; the public route is the Cloudflare tunnel.
-      - "127.0.0.1:${WEB_PORT:-8000}:8000"
-    volumes:
-      - media:/app/media
+      - "127.0.0.1:${WEB_PORT:-8000}:80"
 
 volumes:
   postgres_data:

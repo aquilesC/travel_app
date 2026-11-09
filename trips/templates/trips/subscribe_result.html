@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block meta %}<meta name="robots" content="noindex, nofollow">{% endblock %}
+{% block title %}{{ trip.title }}{% endblock %}
+{% block content %}
+<section class="narrow">
+  <h1>{{ trip.title }}</h1>
+  <p class="{% if ok %}ok{% else %}error{% endif %}">{{ message }}</p>
+  {% if trip.share_enabled %}<p><a href="{% url 'share_trip' share_token %}">Back to the trip</a></p>{% endif %}
+</section>
+{% endblock %}

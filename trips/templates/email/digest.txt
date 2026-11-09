@@ -1,0 +1,9 @@
+News from "{{ trip.title }}"
+{% for entry in entries %}
+{{ entry.occurred_at|date:"D j M, H:i" }}{% if entry.place_name %} · {{ entry.place_name }}{% endif %}
+{{ entry.body|truncatewords:60 }}{% with n=entry.media.all|length %}{% if n %}
+({{ n }} photo{{ n|pluralize }}){% endif %}{% endwith %}
+{% endfor %}
+See everything: {{ share_url }}
+
+Unsubscribe: {{ unsubscribe_url }}
