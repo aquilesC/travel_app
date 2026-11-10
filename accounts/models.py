@@ -24,7 +24,14 @@ class Profile(models.Model):
     user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     # Messages from this number are accepted by the WhatsApp ingest.
     whatsapp_number = models.CharField(
-        max_length=20, unique=True, null=True, blank=True, validators=[validate_e164]
+        max_length=20, unique=True, null=True, blank=True, validators=[validate_e164],
+        help_text="International format, e.g. +31612345678. Only this number can post via WhatsApp.",
+    )
+    # Path relative to MEDIA_ROOT of the 512×512 WebP avatar.
+    avatar = models.CharField(max_length=255, blank=True)
+    is_public = models.BooleanField(
+        default=True, verbose_name="Public profile",
+        help_text="Anyone can see your name, picture, trip count and km at /u/<username>/.",
     )
 
     def save(self, *args, **kwargs):
@@ -33,6 +40,10 @@ class Profile(models.Model):
 
     def __str__(self):
         return f"Profile of {self.user}"
+
+
+def display_name(user):
+    return user.get_full_name() or user.username
 
 
 def create_profile(sender, instance, created, **kwargs):

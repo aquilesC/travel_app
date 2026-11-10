@@ -54,19 +54,26 @@
     }
     const done = await call(`/uploads/${id}/complete/`, { method: "POST" });
     if (!done.ok) throw new Error(done.data.error || "Could not finish the upload");
+    return done.data;
   }
 
   input.addEventListener("change", async () => {
     const files = Array.from(input.files);
     input.disabled = true;
     let failed = false;
+    let skipped = false;
     for (const file of files) {
       const row = document.createElement("li");
       row.textContent = `${file.name}: waiting`;
       progress.appendChild(row);
       try {
-        await uploadFile(file, row);
-        row.textContent = `${file.name}: uploaded ✓`;
+        const result = await uploadFile(file, row);
+        if (result.skipped) {
+          skipped = true;
+          row.textContent = `${file.name}: skipped (${result.skipped})`;
+        } else {
+          row.textContent = `${file.name}: uploaded ✓`;
+        }
       } catch (error) {
         failed = true;
         row.textContent = `${file.name}: ${error.message}`;
@@ -75,7 +82,11 @@
     }
     input.disabled = false;
     input.value = "";
-    if (!failed) window.location.reload();
+    // Stay on the page when something was skipped or failed, so it can be read.
+    if (!failed && !skipped) {
+      if (box.dataset.doneUrl) window.location.href = box.dataset.doneUrl;
+      else window.location.reload();
+    }
   });
 
   // While anything is processing, refresh the list when it's done.

@@ -97,8 +97,17 @@ def process_photo(media):
             copy.save(media_path(relative), "WEBP", quality=82, method=4)
             derivatives[name] = relative
     media.derivatives = derivatives
-    media.taken_at = taken_at
-    media.latitude, media.longitude = latitude, longitude
+    apply_metadata(media, taken_at, latitude, longitude)
+
+
+def apply_metadata(media, taken_at, latitude, longitude):
+    """Fill time/location from the file only where nothing is set yet: an import
+    may already have corrected the time or estimated a location."""
+    if media.taken_at is None:
+        media.taken_at = taken_at
+    if media.latitude is None and latitude is not None:
+        media.latitude, media.longitude = latitude, longitude
+        media.location_source = "exif"
 
 
 # Video and audio -------------------------------------------------------------
@@ -143,8 +152,9 @@ def probe_metadata(info):
 
 def process_video(media):
     source = media_path(media.original.name)
-    info = probe(source)
-    media.duration_seconds, media.taken_at, media.latitude, media.longitude = probe_metadata(info)
+    duration, taken_at, latitude, longitude = probe_metadata(probe(source))
+    media.duration_seconds = duration
+    apply_metadata(media, taken_at, latitude, longitude)
 
     mp4 = derived_name(media, "720.mp4")
     poster = derived_name(media, "poster.jpg")
@@ -174,7 +184,8 @@ def process_video(media):
 
 def process_audio(media):
     source = media_path(media.original.name)
-    media.duration_seconds, media.taken_at, _, _ = probe_metadata(probe(source))
+    media.duration_seconds, taken_at, _, _ = probe_metadata(probe(source))
+    apply_metadata(media, taken_at, None, None)
     if source.suffix.lower() in BROWSER_AUDIO:
         media.derivatives = {"audio": media.original.name}
         return

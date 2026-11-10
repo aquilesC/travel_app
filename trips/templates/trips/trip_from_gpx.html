@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block title %}New trip from GPX{% endblock %}
+{% block content %}
+<section class="narrow">
+  <h1>New trip from GPX</h1>
+  <p>Each file becomes a track. The trip's dates come from the tracks' timestamps.</p>
+  <form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    {{ form.as_div }}
+    <button type="submit" class="primary">Create trip</button>
+    <a href="/">Cancel</a>
+  </form>
+</section>
+{% endblock %}

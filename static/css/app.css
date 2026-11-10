@@ -106,3 +106,17 @@ form div:has(> input[type=checkbox]) label { display: inline; }
 .media-list .actions button { padding: 3px 8px; font-size: 13px; }
 .uploader input[type=file] { display: block; margin-top: 6px; }
 .preview { border-style: dashed; }
+
+.me { display: inline-flex; align-items: center; gap: 6px; }
+.avatar-sm { width: 26px; height: 26px; border-radius: 50%; object-fit: cover; }
+.avatar-lg { width: 112px; height: 112px; border-radius: 50%; object-fit: cover; flex: none; }
+.avatar-empty { display: inline-grid; place-items: center; background: var(--line); font: 700 44px system-ui, sans-serif; color: var(--muted); }
+.avatar-row { margin-bottom: 12px; }
+.profile-head { display: flex; gap: 20px; align-items: center; margin: 12px 0 24px; }
+.profile-head h1 { margin: 0 0 4px; }
+.profile-head .stats { font: 17px system-ui, sans-serif; margin: 0; }
+
+.import-table { width: 100%; border-collapse: collapse; font: 14px system-ui, sans-serif; }
+.import-table td, .import-table th { padding: 6px 4px; border-bottom: 1px solid var(--line); text-align: left; }
+.import-table input { width: 7em; }
+.stat-row { display: flex; flex-wrap: wrap; gap: 18px; font: 15px system-ui, sans-serif; }

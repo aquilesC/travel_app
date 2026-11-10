@@ -19,7 +19,23 @@
 </section>
 {% endif %}
 
+{% if open_imports %}
+<section class="card warn">
+  <h2>Unfinished imports</h2>
+  <ul class="plain">
+  {% for batch in open_imports %}
+    <li><a href="{% url 'import_review' batch.pk %}">{{ batch }}</a> · started {{ batch.created_at|date:"j M H:i" }}</li>
+  {% endfor %}
+  </ul>
+</section>
+{% endif %}
+
 <h1>Our trips</h1>
+<div class="actions trip-head">
+  <a class="button primary" href="{% url 'trip_create' %}">New trip</a>
+  <form method="post" action="{% url 'import_new' %}" class="inline">{% csrf_token %}<button type="submit">New trip from photos</button></form>
+  <a class="button" href="{% url 'trip_from_gpx' %}">New trip from GPX</a>
+</div>
 {% if not trips %}<p>No trips yet. <a href="{% url 'trip_create' %}">Create the first one</a>.</p>{% endif %}
 <ul class="trip-grid">
 {% for trip in trips %}

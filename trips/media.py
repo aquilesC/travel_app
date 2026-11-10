@@ -88,7 +88,18 @@ def _json_body(request):
 
 @require_POST
 def upload_start(request, pk):
-    entry = get_object_or_404(Entry, pk=pk)
+    return _start_upload(request, entry=get_object_or_404(Entry, pk=pk))
+
+
+@require_POST
+def batch_upload_start(request, batch_id):
+    from .models import ImportBatch
+
+    batch = get_object_or_404(ImportBatch, pk=batch_id, status=ImportBatch.OPEN)
+    return _start_upload(request, batch=batch)
+
+
+def _start_upload(request, entry=None, batch=None):
     data = _json_body(request)
     filename = str(data.get("filename", ""))[:255]
     try:
@@ -99,7 +110,8 @@ def upload_start(request, pk):
         return JsonResponse({"error": "Missing file name or size."}, status=400)
     if kind_for(filename) is None:
         return JsonResponse({"error": f"Unsupported file type: {filename}"}, status=400)
-    upload = Upload.objects.create(entry=entry, filename=filename, size=size, created_by=request.user)
+    upload = Upload.objects.create(entry=entry, batch=batch, filename=filename, size=size,
+                                   created_by=request.user)
     upload.temp_path.parent.mkdir(parents=True, exist_ok=True)
     upload.temp_path.touch()
     return JsonResponse({
@@ -148,13 +160,23 @@ def upload_chunk(request, upload_id):
 
 @require_POST
 def upload_complete(request, upload_id):
-    upload = get_object_or_404(Upload.objects.select_related("entry"), pk=upload_id,
+    upload = get_object_or_404(Upload.objects.select_related("entry", "batch"), pk=upload_id,
                                created_by=request.user)
     if upload.received != upload.size:
         return JsonResponse(
             {"error": "Upload incomplete.", "received": upload.received, "size": upload.size},
             status=400,
         )
+    if upload.batch_id:
+        from .importing import stage_file
+
+        item, error = stage_file(upload.batch, upload.temp_path, upload.filename)
+        upload.temp_path.unlink(missing_ok=True)
+        upload.delete()
+        if error:  # duplicates are skipped, not failures
+            return JsonResponse({"skipped": error})
+        return JsonResponse({"item_id": item.pk, "sha256": item.sha256, "size": item.size_bytes})
+
     media, error = store_original(upload.entry, upload.temp_path, upload.filename)
     if error:
         upload.temp_path.unlink(missing_ok=True)

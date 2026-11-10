@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% block title %}Review import{% endblock %}
+{% block content %}
+<section class="narrow">
+  {% if batch.trip %}<p><a href="{{ batch.trip.get_absolute_url }}">← {{ batch.trip.title }}</a></p>{% endif %}
+  <h1>Review import</h1>
+
+  <div class="card">
+    <div class="stat-row">
+      <span><strong>{{ summary.files }}</strong> files</span>
+      <span><strong>{{ summary.entries }}</strong> entr{{ summary.entries|pluralize:"y,ies" }} will be created</span>
+      {% if summary.start %}<span>{{ summary.start|date:"j M Y" }} – {{ summary.end|date:"j M Y" }} ({{ timezone }})</span>{% endif %}
+    </div>
+    <div class="stat-row muted">
+      <span>Location from the file: {{ summary.from_file }}</span>
+      <span>from GPX: {{ summary.from_gpx }}</span>
+      <span>estimated from nearby photos: {{ summary.estimated }}</span>
+      <span>no location: {{ summary.no_location }}</span>
+      {% if summary.undated %}<span class="error">no capture time: {{ summary.undated }} (put in one entry at the start)</span>{% endif %}
+    </div>
+  </div>
+
+  <form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    {{ form.non_field_errors }}
+    {% if not batch.trip %}
+      <h2>The trip</h2>
+      {{ form.title.as_field_group }}
+      {{ form.timezone.as_field_group }}
+      {{ form.travellers.as_field_group }}
+      {{ form.gpx_files.as_field_group }}
+      <p class="muted">GPX files are read when you press “Create”; choose them again if you recalculate first.</p>
+    {% endif %}
+
+    <h2>Camera clocks</h2>
+    <p class="muted">Photos without a time zone in the file are assumed to be in the trip's local time.
+      If a camera's clock was off, shift it here and press “Recalculate”.</p>
+    {% for field in form.shift_fields %}{{ field.as_field_group }}{% endfor %}
+
+    {{ form.make_public.as_field_group }}
+
+    <button type="submit" name="recalculate" value="1">Recalculate</button>
+    <button type="submit" name="create" value="1" class="primary">
+      {% if batch.trip %}Add to {{ batch.trip.title }}{% else %}Create trip{% endif %}
+    </button>
+  </form>
+  <p><a href="{% url 'import_upload' batch.pk %}">Upload more files</a></p>
+</section>
+{% endblock %}

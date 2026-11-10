@@ -32,6 +32,7 @@
       <span class="info">
         {{ m.original_name|default:m.kind }}
         {% if m.is_travel_copy %}<span class="badge">travel copy</span>{% endif %}
+        {% if m.location_source == "gpx" or m.location_source == "interpolated" %}<span class="badge" title="{{ m.get_location_source_display }}">location {{ m.get_location_source_display }}</span>{% endif %}
         <span class="badge status-{{ m.status }}">{{ m.get_status_display }}</span>
         {% if m.error %}<small class="error">{{ m.error|truncatechars:200 }}</small>{% endif %}
         {% if trip.cover_id == m.pk %}<span class="badge">trip cover</span>{% endif %}

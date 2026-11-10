@@ -8,7 +8,7 @@ from django.utils import timezone
 from django.views.decorators.http import require_POST
 
 from .forms import AssignInboundForm, ChapterForm, EntryForm, TrackForm, TripForm
-from .models import Chapter, Entry, InboundMessage, Track, Trip, new_token
+from .models import Chapter, Entry, ImportBatch, InboundMessage, Track, Trip, new_token
 from .templatetags.trips_tags import render_markdown
 from .timeline import build_timeline
 
@@ -18,6 +18,8 @@ def home(request):
         "trips": Trip.objects.select_related("cover").prefetch_related("companions"),
         "unrouted": InboundMessage.objects.filter(status=InboundMessage.UNROUTED),
         "assign_form": AssignInboundForm(),
+        "open_imports": ImportBatch.objects.filter(status=ImportBatch.OPEN, items__isnull=False)
+                                           .select_related("trip").distinct(),
     })
 
 

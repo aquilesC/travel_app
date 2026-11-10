@@ -14,6 +14,7 @@
     {% if user.is_authenticated %}
     <nav>
       <a href="{% url 'trip_create' %}">New trip</a>
+      <a href="{% url 'account' %}" class="me">{% if user.profile.avatar %}<img src="{% url 'public_avatar' user.username %}" alt="" class="avatar-sm">{% endif %}{{ user.get_full_name|default:user.username }}</a>
       <form method="post" action="{% url 'logout' %}" class="inline">{% csrf_token %}<button class="link">Log out</button></form>
     </nav>
     {% endif %}

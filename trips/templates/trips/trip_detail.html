@@ -11,6 +11,7 @@
   {% if trip.description %}<div class="body">{{ trip.description|markdown }}</div>{% endif %}
   <div class="actions">
     <a class="button primary" href="{% url 'entry_create' trip.pk %}">+ Entry</a>
+    <form method="post" action="{% url 'trip_import_start' trip.pk %}" class="inline">{% csrf_token %}<button type="submit">+ Photos</button></form>
     <a class="button" href="{% url 'track_create' trip.pk %}">+ GPX track</a>
     <a class="button" href="{% url 'trip_edit' trip.pk %}">Edit trip & sharing</a>
     {% if trip.share_enabled %}<a class="button" href="{% url 'share_trip' trip.share_token %}">View as family</a>{% endif %}

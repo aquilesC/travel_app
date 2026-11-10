@@ -41,6 +41,10 @@ class Trip(models.Model):
     )
     description = models.TextField(blank=True, help_text="Markdown.")
     companions = models.ManyToManyField(Person, blank=True)
+    # Which of the app's users went on this trip (counts toward their profile).
+    travellers = models.ManyToManyField(
+        settings.AUTH_USER_MODEL, blank=True, related_name="travelled_trips"
+    )
     cover = models.ForeignKey(
         "Media", null=True, blank=True, on_delete=models.SET_NULL, related_name="+"
     )
@@ -175,6 +179,9 @@ class Media(models.Model):
     taken_at = models.DateTimeField(null=True, blank=True)
     latitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
     longitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
+    LOCATION_SOURCES = [("exif", "from the file"), ("gpx", "from a GPX track"),
+                        ("interpolated", "estimated from nearby photos")]
+    location_source = models.CharField(max_length=12, choices=LOCATION_SOURCES, blank=True)
     width = models.PositiveIntegerField(null=True, blank=True)
     height = models.PositiveIntegerField(null=True, blank=True)
     duration_seconds = models.FloatField(null=True, blank=True)
@@ -201,7 +208,10 @@ class Upload(models.Model):
     """An in-progress chunked upload (see static/js/upload.js)."""
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4)
-    entry = models.ForeignKey(Entry, on_delete=models.CASCADE, related_name="uploads")
+    # Exactly one of entry (entry editor) or batch (bulk import) is set.
+    entry = models.ForeignKey(Entry, null=True, blank=True, on_delete=models.CASCADE, related_name="uploads")
+    batch = models.ForeignKey("ImportBatch", null=True, blank=True, on_delete=models.CASCADE,
+                              related_name="uploads")
     filename = models.CharField(max_length=255)
     size = models.BigIntegerField()
     created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
@@ -217,6 +227,46 @@ class Upload(models.Model):
             return self.temp_path.stat().st_size
         except FileNotFoundError:
             return 0
+
+
+class ImportBatch(models.Model):
+    """Photos staged for a bulk import, into an existing trip or a new one."""
+
+    OPEN, DONE = "open", "done"
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4)
+    trip = models.ForeignKey(Trip, null=True, blank=True, on_delete=models.CASCADE,
+                             related_name="imports")
+    created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    status = models.CharField(max_length=10, default=OPEN)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+
+    def __str__(self):
+        return f"Import into {self.trip or 'a new trip'} ({self.items.count()} files)"
+
+
+class ImportItem(models.Model):
+    batch = models.ForeignKey(ImportBatch, on_delete=models.CASCADE, related_name="items")
+    path = models.CharField(max_length=255)  # relative to MEDIA_ROOT
+    original_name = models.CharField(max_length=255)
+    kind = models.CharField(max_length=10, choices=Media.KINDS)
+    sha256 = models.CharField(max_length=64)
+    size_bytes = models.BigIntegerField()
+    # Capture time exactly as the camera wrote it, stored with a UTC label only
+    # because the column needs one: the wall-clock value is what matters. The
+    # real UTC offset is in taken_offset_minutes when the file records one
+    # (phones do; most cameras don't).
+    taken_local = models.DateTimeField(null=True, blank=True)
+    taken_offset_minutes = models.IntegerField(null=True, blank=True)
+    camera = models.CharField(max_length=120, blank=True)
+    latitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
+    longitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
+
+    class Meta:
+        ordering = ["taken_local", "id"]
 
 
 class Track(models.Model):

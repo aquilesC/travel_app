@@ -49,6 +49,7 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "django.contrib.humanize",
     "django_tasks_db",
     "accounts",
     "trips",
@@ -100,7 +101,11 @@ DATABASES = {
 # Database cache (parsed GPX tracks). Table created by `createcachetable`.
 CACHES = {
     "default": {
-        "BACKEND": "django.core.cache.backends.db.DatabaseCache",
+        "BACKEND": (
+            "django.core.cache.backends.locmem.LocMemCache"
+            if TESTING
+            else "django.core.cache.backends.db.DatabaseCache"
+        ),
         "LOCATION": "django_cache",
         "TIMEOUT": 60 * 60 * 24 * 30,
     }

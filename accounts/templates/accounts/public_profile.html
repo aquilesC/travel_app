@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% load humanize trips_tags %}
+{% block meta %}<meta name="robots" content="noindex, nofollow">{% endblock %}
+{% block title %}{{ name }}{% endblock %}
+{% block content %}
+<section class="profile">
+  <header class="profile-head">
+    {% if person.profile.avatar %}<img src="{% url 'public_avatar' person.username %}" alt="" class="avatar-lg">
+    {% else %}<span class="avatar-lg avatar-empty">{{ name|first|upper }}</span>{% endif %}
+    <div>
+      <h1>{{ name }}</h1>
+      <p class="stats"><strong>{{ trip_count }}</strong> trip{{ trip_count|pluralize }} · <strong>{{ km|intcomma }}</strong> km travelled</p>
+    </div>
+  </header>
+
+  {% if shared_trips %}
+  <h2>Trips</h2>
+  <ul class="trip-grid">
+    {% for trip in shared_trips %}
+    <li>
+      <a href="{% url 'share_trip' trip.share_token %}" class="trip-card">
+        {% if trip.cover and trip.cover.status == "ready" and trip.cover.entry.is_public %}<img src="{% url 'share_media' trip.share_token trip.cover.pk 'md' %}" alt="" loading="lazy">{% endif %}
+        <span class="title">{{ trip.title }}</span>
+        <span class="muted">{{ trip.start_date|date:"F Y" }}</span>
+      </a>
+    </li>
+    {% endfor %}
+  </ul>
+  {% endif %}
+</section>
+{% endblock %}

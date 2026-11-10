@@ -1,9 +1,17 @@
 from django.urls import path
 
-from . import media, share, views, whatsapp
+from . import imports, media, share, views, whatsapp
 
 urlpatterns = [
     path("", views.home, name="home"),
+    # Imports
+    path("trips/from-gpx/", imports.trip_from_gpx, name="trip_from_gpx"),
+    path("trips/<int:pk>/import/", imports.trip_import_start, name="trip_import_start"),
+    path("imports/new/", imports.import_new, name="import_new"),
+    path("imports/<uuid:batch_id>/", imports.import_upload, name="import_upload"),
+    path("imports/<uuid:batch_id>/uploads/", media.batch_upload_start, name="batch_upload_start"),
+    path("imports/<uuid:batch_id>/review/", imports.import_review, name="import_review"),
+    path("imports/<uuid:batch_id>/discard/", imports.import_discard, name="import_discard"),
     # Trips
     path("trips/new/", views.trip_create, name="trip_create"),
     path("trips/<int:pk>/", views.trip_detail, name="trip_detail"),

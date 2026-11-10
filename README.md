@@ -44,6 +44,23 @@ docker compose up -d --build
 docker compose run --rm --no-deps -v "$PWD":/app -e RUN_MIGRATIONS=0 web python manage.py test accounts trips
 ```
 
+## Importing
+
+- **Photos into a trip:** trip page → "+ Photos". Upload many at once; on the review page you can
+  shift a camera's clock. Photos are grouped into entries (new entry after 60 min or 2 km).
+- **New trip from photos:** home → "New trip from photos". Same flow; the trip's dates and time zone
+  come from the photos, and optional GPX tracks help place photos without GPS.
+- **New trip from GPX:** home → "New trip from GPX". Each file becomes a track; dates come from the
+  timestamps.
+
+Photos without GPS get a location from a GPX track covering their time (±10 min), otherwise
+between the nearest located photos (within 6 h). The entry editor marks such locations.
+
+## Accounts
+
+- `/account/`: name, email, profile picture, WhatsApp number, public-profile switch.
+- `/u/<username>/`: public profile with trip count, km travelled and shared trips.
+
 ## WhatsApp (Twilio)
 
 1. Twilio console → Messaging → WhatsApp sender (or the sandbox while testing).

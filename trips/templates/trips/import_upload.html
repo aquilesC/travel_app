@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Import photos{% endblock %}
+{% block content %}
+<section class="narrow">
+  {% if batch.trip %}<p><a href="{{ batch.trip.get_absolute_url }}">← {{ batch.trip.title }}</a></p>{% endif %}
+  <h1>{% if batch.trip %}Add photos to {{ batch.trip.title }}{% else %}New trip from photos{% endif %}</h1>
+  <p>Choose as many photos and videos as you like (full resolution is kept). Their time and
+    location are read from the files; on the next page you can correct camera clocks
+    {% if not batch.trip %}and add GPX tracks{% endif %} before anything is created.</p>
+  {% if count %}<p class="ok">{{ count }} file{{ count|pluralize }} uploaded so far.</p>{% endif %}
+
+  <div class="card uploader" id="uploader"
+       data-start-url="{% url 'batch_upload_start' batch.pk %}"
+       data-done-url="{% url 'import_review' batch.pk %}">
+    <label>Photos and videos <input type="file" multiple accept="image/*,video/*,.heic,.heif"></label>
+    <ul class="upload-progress plain"></ul>
+  </div>
+
+  <p>
+    <a class="button primary" href="{% url 'import_review' batch.pk %}">Continue to review</a>
+  </p>
+  <form method="post" action="{% url 'import_discard' batch.pk %}" onsubmit="return confirm('Delete the uploaded files and cancel this import?')">
+    {% csrf_token %}<button type="submit" class="danger">Discard this import</button>
+  </form>
+</section>
+{% endblock %}
+{% block scripts %}<script src="{% static 'js/upload.js' %}" defer></script>{% endblock %}
