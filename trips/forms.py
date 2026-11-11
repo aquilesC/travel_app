@@ -28,14 +28,28 @@ class TripForm(forms.ModelForm):
         }
         labels = {"travellers": "Who of us went", "companions": "Travelling with"}
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, user, **kwargs):
         super().__init__(*args, **kwargs)
         from django.contrib.auth import get_user_model
 
-        self.fields["travellers"].queryset = get_user_model().objects.filter(is_active=True)
+        from .access import fellow_travellers
+
+        # You, people you already travel with, and anyone already on this trip.
+        choices = fellow_travellers(user).values_list("pk", flat=True)
+        current = self.instance.travellers.values_list("pk", flat=True) if self.instance.pk else []
+        self.fields["travellers"].queryset = get_user_model().objects.filter(
+            pk__in=[*choices, *current]).order_by("first_name", "username")
         self.fields["travellers"].label_from_instance = lambda u: u.get_full_name() or u.username
+        self.fields["travellers"].label = "Members"
+        self.fields["travellers"].help_text = "Members can see and edit this trip. Invite new people from “Invite”."
         if not self.instance.pk:
-            self.initial.setdefault("travellers", list(self.fields["travellers"].queryset))
+            self.initial.setdefault("travellers", [user.pk])
+
+    def clean_travellers(self):
+        travellers = self.cleaned_data["travellers"]
+        if not travellers:
+            raise forms.ValidationError("A trip needs at least one member.")
+        return travellers
 
     def save(self, commit=True):
         trip = super().save(commit=commit)
@@ -117,7 +131,11 @@ class SubscribeForm(forms.Form):
 
 
 class AssignInboundForm(forms.Form):
-    trip = forms.ModelChoiceField(queryset=Trip.objects.all())
+    trip = forms.ModelChoiceField(queryset=Trip.objects.none())
+
+    def __init__(self, *args, user, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["trip"].queryset = Trip.objects.filter(travellers=user)
 
 
 # Imports (#11-#13) ---------------------------------------------------------------
@@ -163,13 +181,12 @@ class MultipleGPXField(forms.FileField):
         return result
 
 
-def _traveller_field():
-    from django.contrib.auth import get_user_model
+def _traveller_field(user):
+    from .access import fellow_travellers
 
-    users = get_user_model().objects.filter(is_active=True)
     field = forms.ModelMultipleChoiceField(
-        queryset=users, required=False, widget=forms.CheckboxSelectMultiple,
-        initial=list(users), label="Who of us went",
+        queryset=fellow_travellers(user), required=False, widget=forms.CheckboxSelectMultiple,
+        initial=[user.pk], label="Members", help_text="You are always a member of trips you create.",
     )
     field.label_from_instance = lambda u: u.get_full_name() or u.username
     return field
@@ -186,9 +203,9 @@ class TripFromGPXForm(forms.Form):
                                  help_text="Only needed when the GPX files have no timestamps.")
     end_date = forms.DateField(required=False, widget=forms.DateInput(attrs={"type": "date"}))
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, user, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields["travellers"] = _traveller_field()
+        self.fields["travellers"] = _traveller_field(user)
 
     def clean(self):
         from .importing import has_timestamps
@@ -210,7 +227,7 @@ class ImportForm(forms.Form):
     make_public = forms.BooleanField(required=False, initial=True,
                                      label="Show the new entries on the share link")
 
-    def __init__(self, *args, batch, cameras, guessed_timezone=None, **kwargs):
+    def __init__(self, *args, batch, cameras, user, guessed_timezone=None, **kwargs):
         super().__init__(*args, **kwargs)
         self.cameras = cameras
         for index, (camera, _count) in enumerate(cameras):
@@ -222,7 +239,7 @@ class ImportForm(forms.Form):
             self.fields["title"] = forms.CharField(required=False, max_length=200)
             self.fields["timezone"] = forms.ChoiceField(choices=TIMEZONE_CHOICES,
                                                         initial=guessed_timezone)
-            self.fields["travellers"] = _traveller_field()
+            self.fields["travellers"] = _traveller_field(user)
             self.fields["gpx_files"] = MultipleGPXField(
                 required=False, label="GPX tracks (optional)",
                 help_text="Used to place photos without a location, and shown on the map.")

@@ -4,17 +4,19 @@ from collections import Counter
 from zoneinfo import ZoneInfo
 
 from django.contrib import messages
+from django.http import Http404
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_POST
 
 from . import importing
+from .access import get_trip
 from .forms import ImportForm, TripFromGPXForm
 from .models import ImportBatch, Trip
 
 
 @require_POST
 def trip_import_start(request, pk):
-    trip = get_object_or_404(Trip, pk=pk)
+    trip = get_trip(request.user, pk)
     batch = ImportBatch.objects.create(trip=trip, created_by=request.user)
     return redirect("import_upload", batch_id=batch.pk)
 
@@ -25,13 +27,17 @@ def import_new(request):
     return redirect("import_upload", batch_id=batch.pk)
 
 
-def _open_batch(batch_id):
-    return get_object_or_404(ImportBatch.objects.select_related("trip"), pk=batch_id,
-                             status=ImportBatch.OPEN)
+def open_batch(user, batch_id):
+    """An open import the user started (and, for a trip import, is still a member of)."""
+    batch = get_object_or_404(ImportBatch.objects.select_related("trip"), pk=batch_id,
+                              status=ImportBatch.OPEN, created_by=user)
+    if batch.trip_id and not batch.trip.travellers.filter(pk=user.pk).exists():
+        raise Http404
+    return batch
 
 
 def import_upload(request, batch_id):
-    batch = _open_batch(batch_id)
+    batch = open_batch(request.user, batch_id)
     return render(request, "trips/import_upload.html", {"batch": batch, "count": batch.items.count()})
 
 
@@ -50,7 +56,7 @@ def _summary(batch, items, tz, shifts):
 
 
 def import_review(request, batch_id):
-    batch = _open_batch(batch_id)
+    batch = open_batch(request.user, batch_id)
     items = list(batch.items.all())
     if not items:
         messages.error(request, "Upload some photos first.")
@@ -58,7 +64,7 @@ def import_review(request, batch_id):
     cameras = sorted(Counter(i.camera for i in items).items(), key=lambda c: -c[1])
     guessed = importing.guess_timezone(items)
     form = ImportForm(request.POST or None, request.FILES or None, batch=batch, cameras=cameras,
-                      guessed_timezone=guessed)
+                      user=request.user, guessed_timezone=guessed)
 
     tz_name = batch.trip.timezone if batch.trip_id else guessed
     shifts = {}
@@ -90,7 +96,7 @@ def import_review(request, batch_id):
 
 @require_POST
 def import_discard(request, batch_id):
-    batch = _open_batch(batch_id)
+    batch = open_batch(request.user, batch_id)
     trip = batch.trip
     importing.discard_batch(batch)
     messages.success(request, "Import discarded.")
@@ -98,7 +104,7 @@ def import_discard(request, batch_id):
 
 
 def trip_from_gpx(request):
-    form = TripFromGPXForm(request.POST or None, request.FILES or None)
+    form = TripFromGPXForm(request.POST or None, request.FILES or None, user=request.user)
     if request.method == "POST" and form.is_valid():
         data = form.cleaned_data
         trip = importing.create_trip_from_gpx(

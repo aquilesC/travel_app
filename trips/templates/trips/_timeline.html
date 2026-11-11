@@ -1,13 +1,13 @@
 {% load trips_tags %}
-{% for chapter, entries in timeline %}
-<section class="chapter" {% if chapter %}id="chapter-{{ chapter.pk }}"{% endif %}>
+{% for section in timeline %}{% with chapter=section.chapter %}
+<section class="chapter" {% if chapter %}id="chapter-{{ chapter.pk }}" data-chapter="{{ chapter.title }}"{% else %}data-chapter=""{% endif %}>
   {% if chapter %}
   <header class="chapter-head">
     <h2>{{ chapter.title }}</h2>
     {% if not share_token %}
     <div class="actions">
-      <form method="post" action="{% url 'chapter_move' chapter.pk 'up' %}" class="inline">{% csrf_token %}<button title="Move up">↑</button></form>
-      <form method="post" action="{% url 'chapter_move' chapter.pk 'down' %}" class="inline">{% csrf_token %}<button title="Move down">↓</button></form>
+      <form method="post" action="{% url 'chapter_move' chapter.pk 'up' %}" class="inline">{% csrf_token %}<button title="Move chapter up">↑</button></form>
+      <form method="post" action="{% url 'chapter_move' chapter.pk 'down' %}" class="inline">{% csrf_token %}<button title="Move chapter down">↓</button></form>
       <a href="{% url 'chapter_edit' chapter.pk %}">Rename</a>
       <a href="{% url 'chapter_delete' chapter.pk %}">Delete</a>
       <a href="{% url 'entry_create' trip.pk %}?chapter={{ chapter.pk }}">+ Entry</a>
@@ -16,8 +16,9 @@
   </header>
   {% endif %}
 
-  {% for entry in entries %}
-  <article class="entry{% if not entry.is_public %} private{% endif %}" id="entry-{{ entry.pk }}">
+  {% for entry in section.entries %}{% with point=entry.map_point %}
+  <article class="entry{% if not entry.is_public %} private{% endif %}" id="entry-{{ entry.pk }}"
+           data-entry="{{ entry.pk }}"{% if point %} data-lat="{{ point.0|stringformat:'f' }}" data-lon="{{ point.1|stringformat:'f' }}"{% endif %}>
     <header>
       <time datetime="{{ entry.occurred_at|date:'c' }}">{{ entry.occurred_at|date:"D j M Y, H:i" }}</time>
       {% if entry.place_name %}<span class="place">📍 {{ entry.place_name }}</span>
@@ -35,9 +36,14 @@
       {% for m in items %}
         {% if m.status == "ready" %}
           {% if m.kind == "photo" %}
-            <a href="{% media_url m 'lg' %}" target="_blank" rel="noopener"><img src="{% media_url m 'md' %}" alt="" loading="lazy" {% if m.width %}width="{{ m.width }}" height="{{ m.height }}"{% endif %}></a>
+            <a href="{% media_url m 'lg' %}" class="lb-item" data-kind="photo" data-media="{{ m.pk }}" data-entry="{{ entry.pk }}"
+               data-src="{% media_url m 'lg' %}" target="_blank" rel="noopener"><img src="{% media_url m 'md' %}" alt="" loading="lazy" {% if m.width %}width="{{ m.width }}" height="{{ m.height }}"{% endif %}></a>
           {% elif m.kind == "video" %}
-            <video controls preload="none" playsinline poster="{% media_url m 'poster' %}" src="{% media_url m 'mp4' %}"></video>
+            <div class="lb-item video" data-kind="video" data-media="{{ m.pk }}" data-entry="{{ entry.pk }}"
+                 data-src="{% media_url m 'mp4' %}" data-poster="{% media_url m 'poster' %}">
+              <video controls preload="none" playsinline poster="{% media_url m 'poster' %}" src="{% media_url m 'mp4' %}"></video>
+              <button type="button" class="expand" title="Full screen" aria-label="Open in viewer">⤢</button>
+            </div>
           {% else %}
             <audio controls preload="none" src="{% media_url m 'audio' %}"></audio>
           {% endif %}
@@ -49,10 +55,14 @@
     {% endif %}
     {% endwith %}
   </article>
-  {% empty %}
+  {% endwith %}{% empty %}
     {% if not share_token %}<p class="muted">No entries in this chapter yet.</p>{% endif %}
   {% endfor %}
+
+  {% if section.next_chapter %}
+  <a class="next-chapter" href="#chapter-{{ section.next_chapter.pk }}">Next chapter: {{ section.next_chapter.title }} →</a>
+  {% endif %}
 </section>
-{% empty %}
+{% endwith %}{% empty %}
 <p class="muted">Nothing here yet.</p>
 {% endfor %}

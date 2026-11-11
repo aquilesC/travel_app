@@ -39,9 +39,9 @@ class LoginRequiredTests(TestCase):
         """protects=AC2: private pages need a login;
         fails_when=an anonymous request to / returns content;
         no_claim=every individual view (covered per view in trips tests)."""
-        response = self.client.get("/")
+        response = self.client.get("/account/")
         self.assertEqual(response.status_code, 302)
-        self.assertIn("/accounts/login/", response["Location"])
+        self.assertEqual(response["Location"], "/accounts/login/?next=/account/")
 
     def test_public_endpoints_open(self):
         """protects=health check and login page stay reachable anonymously;

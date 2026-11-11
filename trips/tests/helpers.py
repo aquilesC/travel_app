@@ -26,8 +26,11 @@ class MediaRootTestCase(TestCase):
     def make_trip(self, **kwargs):
         defaults = dict(title="Sri Lanka", start_date=date(2026, 12, 21), end_date=date(2027, 1, 10),
                         timezone="Asia/Colombo", created_by=self.user)
+        members = kwargs.pop("members", [self.user])
         defaults.update(kwargs)
-        return Trip.objects.create(**defaults)
+        trip = Trip.objects.create(**defaults)
+        trip.travellers.set(members)
+        return trip
 
 
 def ffmpeg(*args):

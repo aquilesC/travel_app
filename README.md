@@ -56,10 +56,21 @@ docker compose run --rm --no-deps -v "$PWD":/app -e RUN_MIGRATIONS=0 web python 
 Photos without GPS get a location from a GPX track covering their time (±10 min), otherwise
 between the nearest located photos (within 6 h). The entry editor marks such locations.
 
-## Accounts
+## Accounts and invites
 
-- `/account/`: name, email, profile picture, WhatsApp number, public-profile switch.
+- Log in with **email + password** (django-allauth). "Forgot password?" on the login page sends a
+  reset link. There is no public signup.
+- **Invite people** from "Invite" in the top bar, optionally into one of your trips. They get an
+  email with a link to choose their password (valid 14 days, single use). The invites page also
+  shows the link, so you can send it yourself while email isn't configured.
+- Trips belong to their **members**: only members see and edit a trip. Manage members in
+  "Edit trip & sharing".
+- `/account/`: name, username, profile picture, WhatsApp number, public-profile switch; email and
+  password have their own pages linked from there.
 - `/u/<username>/`: public profile with trip count, km travelled and shared trips.
+
+Invites, password resets and digests need Mailgun configured (see Email below); without it the
+emails only appear in `docker compose logs worker` / `web`.
 
 ## WhatsApp (Twilio)
 

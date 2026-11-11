@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Off the map · Trips{% endblock %}
+{% block meta %}<meta name="robots" content="noindex">{% endblock %}
+{% block content %}
+<section class="error-page">
+  <svg class="lost-compass" viewBox="0 0 120 120" aria-hidden="true">
+    <circle cx="60" cy="60" r="54" class="ring"/>
+    <g class="needle"><path d="M60 18 70 60H50Z" class="north"/><path d="M60 102 50 60h20Z" class="south"/></g>
+    <circle cx="60" cy="60" r="6" class="hub"/>
+  </svg>
+  <h1>This path isn't on the map</h1>
+  <p>The page you were looking for doesn't exist, moved, or isn't shared with you.
+    Even the best explorers take a wrong turn.</p>
+  <p class="actions">
+    <a class="button primary" href="/">Back to {% if user.is_authenticated %}your trips{% else %}the start{% endif %}</a>
+    <a class="button" href="javascript:history.back()">Go back</a>
+  </p>
+</section>
+{% endblock %}

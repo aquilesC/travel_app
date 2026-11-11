@@ -342,7 +342,7 @@ def create_trip_from_batch(batch, *, title, tz_name, travellers, gpx_texts, shif
         start = end = date.today()
     trip = Trip.objects.create(title=title or f"Trip {start:%B %Y}", start_date=start, end_date=end,
                                timezone=tz_name, created_by=author)
-    trip.travellers.set(travellers)
+    trip.travellers.set({*travellers, author})  # creator is always a member
     for name, text in gpx_texts:
         Track.objects.create(trip=trip, name=name, gpx_text=text, uploaded_by=author)
     create_entries(batch, trip, shifts, make_public, author)
@@ -376,7 +376,7 @@ def create_trip_from_gpx(*, files, tz_name, mode, title, start_date, end_date, t
         title=title or names[0] or f"Trip {start_date:%B %Y}", start_date=start_date,
         end_date=end_date, timezone=tz_name, created_by=author,
     )
-    trip.travellers.set(travellers)
+    trip.travellers.set({*travellers, author})  # creator is always a member
     for (_, text), name in zip(files, names):
         Track.objects.create(trip=trip, name=name, mode=mode, gpx_text=text, uploaded_by=author)
     return trip

@@ -1,65 +1,82 @@
-"""Owner-side pages: trips, chapters, entries, tracks. All require login."""
+"""Member pages: trips, chapters, entries, tracks. Non-members get 404 everywhere."""
 
 from django.contrib import messages
+from django.contrib.auth.decorators import login_not_required
 from django.db import transaction
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
+from django.urls import reverse
 from django.utils import timezone
 from django.views.decorators.http import require_POST
 
+from .access import get_owned, get_trip, member_trips
 from .forms import AssignInboundForm, ChapterForm, EntryForm, TrackForm, TripForm
 from .models import Chapter, Entry, ImportBatch, InboundMessage, Track, Trip, new_token
 from .templatetags.trips_tags import render_markdown
 from .timeline import build_timeline
 
 
+def own_unrouted(user):
+    number = getattr(getattr(user, "profile", None), "whatsapp_number", None)
+    if not number:
+        return InboundMessage.objects.none()
+    return InboundMessage.objects.filter(status=InboundMessage.UNROUTED, from_number=number)
+
+
+@login_not_required
 def home(request):
+    if not request.user.is_authenticated:
+        return render(request, "landing.html", {"hide_login": False})
     return render(request, "trips/home.html", {
-        "trips": Trip.objects.select_related("cover").prefetch_related("companions"),
-        "unrouted": InboundMessage.objects.filter(status=InboundMessage.UNROUTED),
-        "assign_form": AssignInboundForm(),
-        "open_imports": ImportBatch.objects.filter(status=ImportBatch.OPEN, items__isnull=False)
-                                           .select_related("trip").distinct(),
+        "trips": member_trips(request.user).select_related("cover").prefetch_related("companions", "travellers"),
+        "unrouted": own_unrouted(request.user),
+        "assign_form": AssignInboundForm(user=request.user),
+        "open_imports": ImportBatch.objects.filter(status=ImportBatch.OPEN, created_by=request.user,
+                                                   items__isnull=False).select_related("trip").distinct(),
     })
 
 
 # Trips -----------------------------------------------------------------------
 
 def trip_create(request):
-    form = TripForm(request.POST or None)
+    form = TripForm(request.POST or None, user=request.user)
     if request.method == "POST" and form.is_valid():
         form.instance.created_by = request.user
         trip = form.save()
+        trip.travellers.add(request.user)  # creator is always a member
         messages.success(request, "Trip created.")
         return redirect(trip)
     return render(request, "trips/trip_form.html", {"form": form})
 
 
 def trip_edit(request, pk):
-    trip = get_object_or_404(Trip, pk=pk)
-    form = TripForm(request.POST or None, instance=trip)
+    trip = get_trip(request.user, pk)
+    form = TripForm(request.POST or None, instance=trip, user=request.user)
     if request.method == "POST" and form.is_valid():
         form.save()
+        if not trip.travellers.filter(pk=request.user.pk).exists():
+            messages.success(request, f"You left “{trip.title}”.")
+            return redirect("home")
         messages.success(request, "Trip saved.")
         return redirect(trip)
     return render(request, "trips/trip_form.html", {"form": form, "trip": trip})
 
 
 def trip_delete(request, pk):
-    trip = get_object_or_404(Trip, pk=pk)
+    trip = get_trip(request.user, pk)
     if request.method == "POST":
         trip.delete()
         messages.success(request, f"Deleted “{trip.title}”.")
         return redirect("home")
     return render(request, "trips/confirm_delete.html", {
         "object": trip, "what": "trip",
-        "warning": "All its entries, photos, videos and tracks are deleted too.",
+        "warning": "All its entries, photos, videos and tracks are deleted too, for every member.",
         "cancel_url": trip.get_absolute_url(),
     })
 
 
 def trip_detail(request, pk):
-    trip = get_object_or_404(Trip.objects.prefetch_related("companions", "tracks"), pk=pk)
+    trip = get_trip(request.user, pk, Trip.objects.prefetch_related("companions", "tracks", "travellers"))
     timezone.activate(trip.tz)
     public_only = request.GET.get("public") == "1"
     return render(request, "trips/trip_detail.html", {
@@ -72,7 +89,7 @@ def trip_detail(request, pk):
 
 @require_POST
 def trip_regenerate_token(request, pk):
-    trip = get_object_or_404(Trip, pk=pk)
+    trip = get_trip(request.user, pk)
     trip.share_token = new_token()
     trip.save(update_fields=["share_token", "updated_at"])
     messages.success(request, "New share link created; the old one no longer works.")
@@ -82,15 +99,16 @@ def trip_regenerate_token(request, pk):
 def trip_map_data(request, pk):
     from .gpx import map_data
 
-    trip = get_object_or_404(Trip, pk=pk)
-    return JsonResponse(map_data(trip, public_only=False))
+    trip = get_trip(request.user, pk)
+    return JsonResponse(map_data(
+        trip, public_only=False, media_url=lambda m, v: reverse("serve_media", args=[m.pk, v])))
 
 
 # Chapters --------------------------------------------------------------------
 
 @require_POST
 def chapter_create(request, pk):
-    trip = get_object_or_404(Trip, pk=pk)
+    trip = get_trip(request.user, pk)
     form = ChapterForm(request.POST)
     if form.is_valid():
         form.instance.trip = trip
@@ -102,7 +120,7 @@ def chapter_create(request, pk):
 
 
 def chapter_edit(request, pk):
-    chapter = get_object_or_404(Chapter, pk=pk)
+    chapter = get_owned(request.user, Chapter, pk=pk)
     form = ChapterForm(request.POST or None, instance=chapter)
     if request.method == "POST" and form.is_valid():
         form.save()
@@ -113,7 +131,7 @@ def chapter_edit(request, pk):
 
 
 def chapter_delete(request, pk):
-    chapter = get_object_or_404(Chapter, pk=pk)
+    chapter = get_owned(request.user, Chapter, pk=pk)
     trip = chapter.trip
     if request.method == "POST":
         chapter.delete()
@@ -127,7 +145,7 @@ def chapter_delete(request, pk):
 
 @require_POST
 def chapter_move(request, pk, direction):
-    chapter = get_object_or_404(Chapter, pk=pk)
+    chapter = get_owned(request.user, Chapter, pk=pk)
     siblings = chapter.trip.chapters.all()
     if direction == "up":
         other = siblings.filter(position__lt=chapter.position).order_by("-position").first()
@@ -172,16 +190,16 @@ def _entry_form_page(request, trip, entry=None):
 
 
 def entry_create(request, pk):
-    return _entry_form_page(request, get_object_or_404(Trip, pk=pk))
+    return _entry_form_page(request, get_trip(request.user, pk))
 
 
 def entry_edit(request, pk):
-    entry = get_object_or_404(Entry.objects.select_related("trip"), pk=pk)
+    entry = get_owned(request.user, Entry.objects.select_related("trip"), pk=pk)
     return _entry_form_page(request, entry.trip, entry)
 
 
 def entry_delete(request, pk):
-    entry = get_object_or_404(Entry, pk=pk)
+    entry = get_owned(request.user, Entry, pk=pk)
     trip = entry.trip
     if request.method == "POST":
         entry.delete()
@@ -210,16 +228,16 @@ def _track_form_page(request, trip, track=None):
 
 
 def track_create(request, pk):
-    return _track_form_page(request, get_object_or_404(Trip, pk=pk))
+    return _track_form_page(request, get_trip(request.user, pk))
 
 
 def track_edit(request, pk):
-    track = get_object_or_404(Track, pk=pk)
+    track = get_owned(request.user, Track, pk=pk)
     return _track_form_page(request, track.trip, track)
 
 
 def track_delete(request, pk):
-    track = get_object_or_404(Track, pk=pk)
+    track = get_owned(request.user, Track, pk=pk)
     trip = track.trip
     if request.method == "POST":
         track.delete()
@@ -236,8 +254,8 @@ def track_delete(request, pk):
 def inbound_assign(request, pk):
     from .tasks import process_inbound
 
-    message = get_object_or_404(InboundMessage, pk=pk, status=InboundMessage.UNROUTED)
-    form = AssignInboundForm(request.POST)
+    message = get_object_or_404(own_unrouted(request.user), pk=pk)
+    form = AssignInboundForm(request.POST, user=request.user)
     if form.is_valid():
         process_inbound.enqueue(message.pk, trip_id=form.cleaned_data["trip"].pk)
         messages.success(request, f"Message queued for “{form.cleaned_data['trip']}”.")

@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block title %}Invite people{% endblock %}
+{% block content %}
+<section class="narrow">
+  <h1>Invite people</h1>
+  <p>They get an email with a link to set their password. If you pick a trip, they join it and can
+    add entries and photos; otherwise they start with an empty journal of their own.</p>
+  <form method="post" class="card">
+    {% csrf_token %}
+    {{ form.as_div }}
+    <button type="submit" class="primary">Send invite</button>
+  </form>
+
+  {% if sent %}
+  <h2>Your invites</h2>
+  <ul class="plain invite-list">
+    {% for invite in sent %}
+    <li>
+      <div><strong>{{ invite.email }}</strong>{% if invite.trip %} → {{ invite.trip.title }}{% endif %}
+        <span class="badge status-{{ invite.status }}">{{ invite.status }}</span></div>
+      <div class="muted">
+        {% if invite.status == "accepted" %}joined {{ invite.accepted_at|date:"j M Y" }}
+        {% elif invite.status == "pending" %}expires {{ invite.expires_at|date:"j M Y" }}
+        {% else %}expired {{ invite.expires_at|date:"j M Y" }}{% endif %}
+      </div>
+      {% if invite.status != "accepted" %}
+      <div class="actions">
+        {% if invite.status == "pending" %}
+        <input type="text" readonly value="{{ invite.url }}" onclick="this.select()" aria-label="Invite link" class="invite-link">
+        {% endif %}
+        <form method="post" action="{% url 'invite_resend' invite.pk %}" class="inline">{% csrf_token %}<button>Send again</button></form>
+        <form method="post" action="{% url 'invite_revoke' invite.pk %}" class="inline">{% csrf_token %}<button class="danger">Revoke</button></form>
+      </div>
+      {% endif %}
+    </li>
+    {% endfor %}
+  </ul>
+  {% endif %}
+</section>
+{% endblock %}

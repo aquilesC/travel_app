@@ -9,3 +9,4 @@ pillow==13.0.0
 pillow-heif==1.8.1
 markdown==3.11.3
 nh3==0.3.7
+django-allauth==65.21.1

@@ -143,6 +143,15 @@ class Entry(models.Model):
     def has_location(self):
         return self.latitude is not None and self.longitude is not None
 
+    def map_point(self):
+        """(lat, lon) for the map: the entry's own location, else its first located photo."""
+        if self.has_location:
+            return float(self.latitude), float(self.longitude)
+        for media in self.media.all():  # uses prefetched media when available
+            if media.latitude is not None:
+                return float(media.latitude), float(media.longitude)
+        return None
+
     def get_absolute_url(self):
         return reverse("trip_detail", args=[self.trip_id]) + f"#entry-{self.pk}"
 

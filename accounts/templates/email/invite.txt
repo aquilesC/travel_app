@@ -1,0 +1,8 @@
+Hi,
+
+{{ inviter }} invited you to {% if invite.trip %}join "{{ invite.trip.title }}" on {% endif %}Trips, the travel journal where we keep our holidays: stories, photos, maps and GPX tracks.
+
+Set your password and get started here:
+{{ invite.url }}
+
+The link works once and expires on {{ invite.expires_at|date:"j F Y" }}.

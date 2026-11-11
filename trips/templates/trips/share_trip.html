@@ -2,27 +2,32 @@
 {% load trips_tags %}
 {% block meta %}<meta name="robots" content="noindex, nofollow">{% endblock %}
 {% block title %}{{ trip.title }}{% endblock %}
+{% block main_class %}wide{% endblock %}
 {% block content %}
-<header class="trip-head">
-  {% if cover %}<img class="cover" src="{% media_url cover 'lg' %}" alt="">{% endif %}
-  <h1>{{ trip.title }}</h1>
-  <p class="muted">
-    {{ trip.start_date|date:"j F Y" }} – {{ trip.end_date|date:"j F Y" }}
-    {% if trip.companions.all %} · with {{ trip.companions.all|join:", " }}{% endif %}
-  </p>
-  {% if trip.description %}<div class="body">{{ trip.description|markdown }}</div>{% endif %}
-</header>
+<div class="reader">
+  <div class="story">
+    {% include "trips/_story_bar.html" %}
+    <header class="trip-head">
+      {% if cover %}<img class="cover" src="{% media_url cover 'lg' %}" alt="">{% endif %}
+      <h1>{{ trip.title }}</h1>
+      <p class="muted">
+        {{ trip.start_date|date:"j F Y" }} – {{ trip.end_date|date:"j F Y" }}
+        {% if trip.companions.all %} · with {{ trip.companions.all|join:", " }}{% endif %}
+      </p>
+      {% if trip.description %}<div class="body">{{ trip.description|markdown }}</div>{% endif %}
+    </header>
 
-{% url 'share_map_data' share_token as map_url %}
-{% include "trips/_map.html" with map_url=map_url %}
+    {% include "trips/_timeline.html" %}
 
-{% include "trips/_timeline.html" %}
-
-<form method="post" action="{% url 'subscribe' share_token %}" class="card subscribe">
-  {% csrf_token %}
-  <h2>Follow along</h2>
-  <p>Get one email a day when there's news from this trip.</p>
-  {{ subscribe_form.email }} {{ subscribe_form.website }}
-  <button type="submit" class="primary">Subscribe</button>
-</form>
+    <form method="post" action="{% url 'subscribe' share_token %}" class="card subscribe">
+      {% csrf_token %}
+      <h2>Follow along</h2>
+      <p>Get one email a day when there's news from this trip.</p>
+      {{ subscribe_form.email }} {{ subscribe_form.website }}
+      <button type="submit" class="primary">Subscribe</button>
+    </form>
+  </div>
+  {% url 'share_map_data' share_token as map_url %}
+  {% include "trips/_map.html" with map_url=map_url %}
+</div>
 {% endblock %}

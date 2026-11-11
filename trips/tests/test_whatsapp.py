@@ -39,6 +39,7 @@ class WhatsAppTests(MediaRootTestCase):
         self.trip = Trip.objects.create(title="Sri Lanka", start_date=date.today() - timedelta(days=2),
                                         end_date=date.today() + timedelta(days=10),
                                         timezone="Asia/Colombo", created_by=self.user)
+        self.trip.travellers.add(self.user)
         self.sent = []
         patches = [
             mock.patch("trips.whatsapp.send_whatsapp", side_effect=lambda to, body: self.sent.append((to, body))),
@@ -170,10 +171,10 @@ class RoutingUnitTests(MediaRootTestCase):
         no_claim=trips spanning date-line jumps."""
         colombo = self.make_trip(start_date=date(2026, 12, 21), end_date=date(2027, 1, 10))
         # 2026-12-20 19:00 UTC = 2026-12-21 00:30 in Colombo -> trip day 1.
-        self.assertEqual(active_trip(datetime(2026, 12, 20, 19, 0, tzinfo=dt_timezone.utc)), colombo)
-        self.assertIsNone(active_trip(datetime(2026, 12, 20, 18, 0, tzinfo=dt_timezone.utc)))
+        self.assertEqual(active_trip(datetime(2026, 12, 20, 19, 0, tzinfo=dt_timezone.utc), self.user), colombo)
+        self.assertIsNone(active_trip(datetime(2026, 12, 20, 18, 0, tzinfo=dt_timezone.utc), self.user))
         weekend = self.make_trip(title="Side trip", start_date=date(2026, 12, 26), end_date=date(2026, 12, 28))
-        self.assertEqual(active_trip(datetime(2026, 12, 27, 6, 0, tzinfo=dt_timezone.utc)), weekend)
+        self.assertEqual(active_trip(datetime(2026, 12, 27, 6, 0, tzinfo=dt_timezone.utc), self.user), weekend)
 
     def test_parse_commands(self):
         """protects=commands are recognised only at the start and stripped from the text;

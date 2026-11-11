@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block title %}Join Trips{% endblock %}
+{% block meta %}<meta name="robots" content="noindex, nofollow">{% endblock %}
+{% block main_class %}auth-page{% endblock %}
+{% block content %}
+<h1>Welcome aboard</h1>
+<p>{{ inviter }} invited you{% if invite.trip %} to <strong>{{ invite.trip.title }}</strong>{% endif %}.
+  Choose a password for <strong>{{ invite.email }}</strong> and you're in.</p>
+<form method="post">
+  {% csrf_token %}
+  {{ form.as_div }}
+  <button type="submit" class="primary">Create my account</button>
+</form>
+{% endblock %}

@@ -2,7 +2,13 @@ from django.contrib import admin
 from django.contrib.auth import get_user_model
 from django.contrib.auth.admin import UserAdmin
 
-from .models import Profile
+from .models import Invite, Profile
+
+
+@admin.register(Invite)
+class InviteAdmin(admin.ModelAdmin):
+    list_display = ["email", "invited_by", "trip", "created_at", "expires_at", "accepted_at"]
+    readonly_fields = ["token"]
 
 
 class ProfileInline(admin.StackedInline):

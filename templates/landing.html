@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Trips · a travel journal that writes itself{% endblock %}
+{% block meta %}<meta name="description" content="Record trips as they happen: WhatsApp messages, photos, GPX tracks and maps, shared with the people at home.">{% endblock %}
+{% block body_class %}landing{% endblock %}
+{% block main_class %}wide{% endblock %}
+{% block content %}
+<section class="hero">
+  <div class="hero-text">
+    <p class="eyebrow">Invite-only travel journal</p>
+    <h1>Every trip, told as it&nbsp;happened.</h1>
+    <p class="lede">Send a WhatsApp message from a mountain pass, drop in the GPX from your bike ride,
+      pour in the photos when you're home. Trips turns it into a story with a map, ready for family
+      today and for you in twenty years.</p>
+    <p class="cta">
+      <a class="button primary big" href="{% url 'account_login' %}">Log in</a>
+      <span class="muted">New here? Ask someone who uses Trips for an invite.</span>
+    </p>
+  </div>
+  <svg class="hero-map" viewBox="0 0 520 420" role="img" aria-label="A hand-drawn route across a map, with pins">
+    <defs>
+      <pattern id="grid" width="26" height="26" patternUnits="userSpaceOnUse">
+        <path d="M26 0H0V26" fill="none" class="grid-line"/>
+      </pattern>
+    </defs>
+    <rect width="520" height="420" rx="22" fill="url(#grid)" class="map-bg"/>
+    <path class="coast" d="M-10 300C60 270 90 320 150 300S240 230 300 250 420 330 530 290V430H-10Z"/>
+    <path class="coast lake" d="M330 90c30-20 80-10 90 20s-30 50-70 45-50-45-20-65Z"/>
+    <path class="route" d="M60 340C90 250 70 190 140 160S250 200 290 140 360 60 430 110 470 230 400 270 300 330 250 360"/>
+    <g class="pins">
+      <g transform="translate(60 340)"><circle r="9"/><circle r="3.5" class="dot"/></g>
+      <g transform="translate(140 160)"><circle r="9"/><circle r="3.5" class="dot"/></g>
+      <g transform="translate(290 140)"><circle r="9"/><circle r="3.5" class="dot"/></g>
+      <g transform="translate(430 110)"><circle r="9"/><circle r="3.5" class="dot"/></g>
+      <g transform="translate(250 360)"><circle r="9"/><circle r="3.5" class="dot"/></g>
+    </g>
+    <g class="polaroid" transform="translate(318 168) rotate(6)">
+      <rect width="120" height="104" rx="4"/><rect x="8" y="8" width="104" height="70" rx="2" class="photo"/>
+      <path d="M8 78 40 46l22 20 18-14 32 26Z" class="hill"/><circle cx="92" cy="26" r="9" class="sun"/>
+      <text x="60" y="96" text-anchor="middle">Day 3 · Ella</text>
+    </g>
+  </svg>
+</section>
+
+<section class="features">
+  <article>
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20l1.3-3.9A8 8 0 1 1 8 19.1L4 20Z"/><path d="M9 10h6M9 13h4"/></svg>
+    <h2>Journal by WhatsApp</h2>
+    <p>Text, photos, voice notes and your location, sent from the road. Messages land in today's
+      trip; <code>#chapter Galle</code> starts a new chapter.</p>
+  </article>
+  <article>
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6l6-2 6 2 6-2v14l-6 2-6-2-6 2Z"/><path d="M9 4v14M15 6v14"/></svg>
+    <h2>Maps that follow the story</h2>
+    <p>Sailing, cycling, hiking: GPX tracks in their own colours, every photo pinned, and the map
+      flies along as you scroll.</p>
+  </article>
+  <article>
+    <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="10" r="2"/><path d="M21 16l-5-5-8 8"/></svg>
+    <h2>Trips from your photos</h2>
+    <p>Drop in hundreds of photos: dates, places and chapters fall into place, and camera photos
+      without GPS borrow it from the track or the phone.</p>
+  </article>
+  <article>
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12v7a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-7"/><path d="M16 6l-4-4-4 4M12 2v13"/></svg>
+    <h2>Shared with the people at home</h2>
+    <p>One private link per trip and a daily email for family. You decide which entries they see.</p>
+  </article>
+</section>
+{% endblock %}

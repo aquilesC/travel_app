@@ -16,6 +16,7 @@ from django.http import FileResponse, Http404, HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect
 from django.views.decorators.http import require_GET, require_POST
 
+from .access import get_owned
 from .models import Entry, Media, Upload
 
 PHOTO_EXT = {".jpg", ".jpeg", ".png", ".heic", ".heif", ".webp", ".gif", ".tif", ".tiff"}
@@ -88,14 +89,16 @@ def _json_body(request):
 
 @require_POST
 def upload_start(request, pk):
-    return _start_upload(request, entry=get_object_or_404(Entry, pk=pk))
+    return _start_upload(request, entry=get_owned(request.user, Entry, pk=pk))
 
 
 @require_POST
 def batch_upload_start(request, batch_id):
     from .models import ImportBatch
 
-    batch = get_object_or_404(ImportBatch, pk=batch_id, status=ImportBatch.OPEN)
+    from .imports import open_batch
+
+    batch = open_batch(request.user, batch_id)
     return _start_upload(request, batch=batch)
 
 
@@ -190,7 +193,7 @@ def upload_complete(request, upload_id):
 
 @require_POST
 def media_delete(request, pk):
-    media = get_object_or_404(Media, pk=pk)
+    media = get_owned(request.user, Media, pk=pk)
     entry = media.entry
     media.delete()  # files removed by the post_delete signal
     messages.success(request, "Removed.")
@@ -199,7 +202,7 @@ def media_delete(request, pk):
 
 @require_POST
 def media_move(request, pk, direction):
-    media = get_object_or_404(Media, pk=pk)
+    media = get_owned(request.user, Media, pk=pk)
     items = list(media.entry.media.order_by("position", "id"))
     index = items.index(media)
     swap = index - 1 if direction == "up" else index + 1
@@ -212,7 +215,7 @@ def media_move(request, pk, direction):
 
 @require_POST
 def media_cover(request, pk):
-    media = get_object_or_404(Media.objects.select_related("entry__trip"), pk=pk, kind=Media.PHOTO)
+    media = get_owned(request.user, Media.objects.select_related("entry__trip"), pk=pk, kind=Media.PHOTO)
     trip = media.entry.trip
     trip.cover = media
     trip.save(update_fields=["cover", "updated_at"])
@@ -224,7 +227,7 @@ def media_cover(request, pk):
 def media_retry(request, pk):
     from .tasks import process_media
 
-    media = get_object_or_404(Media, pk=pk)
+    media = get_owned(request.user, Media, pk=pk)
     media.status, media.error = Media.PENDING, ""
     media.save(update_fields=["status", "error"])
     process_media.enqueue(media.pk)
@@ -233,7 +236,7 @@ def media_retry(request, pk):
 
 @require_GET
 def media_status(request, pk):
-    entry = get_object_or_404(Entry, pk=pk)
+    entry = get_owned(request.user, Entry, pk=pk)
     return JsonResponse({"media": [
         {"id": m.pk, "status": m.status} for m in entry.media.all()
     ]})
@@ -259,7 +262,7 @@ def file_response(relative_path):
 
 @require_GET
 def serve_media(request, pk, variant):
-    media = get_object_or_404(Media, pk=pk)
+    media = get_owned(request.user, Media, pk=pk)
     return file_response(media.variant_path(variant))
 
 

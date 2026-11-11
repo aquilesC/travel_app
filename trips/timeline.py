@@ -1,10 +1,19 @@
+from dataclasses import dataclass
+
 from django.db.models import Prefetch
 
 from .models import Media
 
 
+@dataclass
+class Section:
+    chapter: object  # Chapter or None (entries before any chapter)
+    entries: list
+    next_chapter: object = None
+
+
 def build_timeline(trip, public_only=False):
-    """[(chapter_or_None, [entries...]), ...] in chapter order, entries by time.
+    """[Section, ...] in chapter order, entries by time.
 
     Entries without a chapter come first (e.g. WhatsApp posts before any #chapter).
     """
@@ -21,10 +30,13 @@ def build_timeline(trip, public_only=False):
     for entry in entries:
         groups.setdefault(entry.chapter_id, []).append(entry)
 
-    timeline = []
+    sections = []
     if groups[None]:
-        timeline.append((None, groups[None]))
+        sections.append(Section(None, groups[None]))
     for chapter in chapters:
         if groups[chapter.pk] or not public_only:
-            timeline.append((chapter, groups[chapter.pk]))
-    return timeline
+            sections.append(Section(chapter, groups[chapter.pk]))
+    named = [s for s in sections if s.chapter]
+    for current, following in zip(named, named[1:]):
+        current.next_chapter = following.chapter
+    return sections

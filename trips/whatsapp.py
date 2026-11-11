@@ -124,10 +124,10 @@ def download_media(url, target, max_bytes=None):
 
 # Message → entry -------------------------------------------------------------
 
-def active_trip(when):
-    """Trip whose dates (in its own time zone) include `when`; latest start wins."""
+def active_trip(when, user):
+    """The user's trip whose dates (in its own zone) include `when`; latest start wins."""
     day = when.date()
-    candidates = Trip.objects.filter(start_date__lte=day + timedelta(days=1),
+    candidates = Trip.objects.filter(travellers=user, start_date__lte=day + timedelta(days=1),
                                      end_date__gte=day - timedelta(days=1))
     matches = [t for t in candidates if t.start_date <= when.astimezone(t.tz).date() <= t.end_date]
     return max(matches, key=lambda t: (t.start_date, t.pk)) if matches else None
@@ -175,7 +175,8 @@ def process_message(message_id, trip_id=None):
         log.warning("Rejected WhatsApp message from unknown number %s", number)
         return
 
-    trip = Trip.objects.filter(pk=trip_id).first() if trip_id else active_trip(message.received_at)
+    trip = (Trip.objects.filter(pk=trip_id, travellers=profile.user).first() if trip_id
+            else active_trip(message.received_at, profile.user))
     if trip is None:
         message.status = InboundMessage.UNROUTED
         message.save(update_fields=["status"])

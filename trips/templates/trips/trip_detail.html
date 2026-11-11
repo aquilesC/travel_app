@@ -1,42 +1,48 @@
 {% extends "base.html" %}
 {% load trips_tags %}
 {% block title %}{{ trip.title }}{% endblock %}
+{% block main_class %}wide{% endblock %}
 {% block content %}
-<header class="trip-head">
-  <h1>{{ trip.title }}</h1>
-  <p class="muted">
-    {{ trip.start_date|date:"j M Y" }} – {{ trip.end_date|date:"j M Y" }} · {{ trip.timezone }}
-    {% if trip.companions.all %} · with {{ trip.companions.all|join:", " }}{% endif %}
-  </p>
-  {% if trip.description %}<div class="body">{{ trip.description|markdown }}</div>{% endif %}
-  <div class="actions">
-    <a class="button primary" href="{% url 'entry_create' trip.pk %}">+ Entry</a>
-    <form method="post" action="{% url 'trip_import_start' trip.pk %}" class="inline">{% csrf_token %}<button type="submit">+ Photos</button></form>
-    <a class="button" href="{% url 'track_create' trip.pk %}">+ GPX track</a>
-    <a class="button" href="{% url 'trip_edit' trip.pk %}">Edit trip & sharing</a>
-    {% if trip.share_enabled %}<a class="button" href="{% url 'share_trip' trip.share_token %}">View as family</a>{% endif %}
-    {% if public_only %}<a href="?">Show all entries</a>{% else %}<a href="?public=1">Show public only</a>{% endif %}
+<div class="reader">
+  <div class="story">
+    {% include "trips/_story_bar.html" %}
+    <header class="trip-head">
+      <h1>{{ trip.title }}</h1>
+      <p class="muted">
+        {{ trip.start_date|date:"j M Y" }} – {{ trip.end_date|date:"j M Y" }} · {{ trip.timezone }}
+        · members: {% for u in trip.travellers.all %}{{ u.get_full_name|default:u.username }}{% if not forloop.last %}, {% endif %}{% endfor %}
+        {% if trip.companions.all %} · with {{ trip.companions.all|join:", " }}{% endif %}
+      </p>
+      {% if trip.description %}<div class="body">{{ trip.description|markdown }}</div>{% endif %}
+      <div class="actions">
+        <a class="button primary" href="{% url 'entry_create' trip.pk %}">+ Entry</a>
+        <form method="post" action="{% url 'trip_import_start' trip.pk %}" class="inline">{% csrf_token %}<button type="submit">+ Photos</button></form>
+        <a class="button" href="{% url 'track_create' trip.pk %}">+ GPX track</a>
+        <a class="button" href="{% url 'trip_edit' trip.pk %}">Edit trip & sharing</a>
+        {% if trip.share_enabled %}<a class="button" href="{% url 'share_trip' trip.share_token %}">View as family</a>{% endif %}
+        {% if public_only %}<a href="?">Show all entries</a>{% else %}<a href="?public=1">Show public only</a>{% endif %}
+      </div>
+    </header>
+
+    {% if trip.tracks.all %}
+    <details class="card">
+      <summary>Tracks ({{ trip.tracks.all|length }})</summary>
+      <ul class="plain">
+        {% for track in trip.tracks.all %}
+        <li>{{ track }} · {{ track.get_mode_display }} · <a href="{% url 'track_edit' track.pk %}">Edit</a> · <a href="{% url 'track_delete' track.pk %}">Delete</a></li>
+        {% endfor %}
+      </ul>
+    </details>
+    {% endif %}
+
+    {% include "trips/_timeline.html" %}
+
+    <form method="post" action="{% url 'chapter_create' trip.pk %}" class="card inline-form">
+      {% csrf_token %}
+      <label for="id_title">New chapter</label> {{ chapter_form.title }} <button>Add chapter</button>
+    </form>
   </div>
-</header>
-
-{% url 'trip_map_data' trip.pk as map_url %}
-{% include "trips/_map.html" with map_url=map_url %}
-
-{% if trip.tracks.all %}
-<details class="card">
-  <summary>Tracks ({{ trip.tracks.all|length }})</summary>
-  <ul class="plain">
-    {% for track in trip.tracks.all %}
-    <li>{{ track }} · {{ track.get_mode_display }} · <a href="{% url 'track_edit' track.pk %}">Edit</a> · <a href="{% url 'track_delete' track.pk %}">Delete</a></li>
-    {% endfor %}
-  </ul>
-</details>
-{% endif %}
-
-{% include "trips/_timeline.html" %}
-
-<form method="post" action="{% url 'chapter_create' trip.pk %}" class="card inline-form">
-  {% csrf_token %}
-  <label for="id_title">New chapter</label> {{ chapter_form.title }} <button>Add chapter</button>
-</form>
+  {% url 'trip_map_data' trip.pk as map_url %}
+  {% include "trips/_map.html" with map_url=map_url %}
+</div>
 {% endblock %}

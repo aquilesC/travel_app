@@ -1,14 +1,15 @@
 from django.contrib import messages
-from django.contrib.auth import get_user_model
+from django.contrib.auth import get_user_model, login
 from django.contrib.auth.decorators import login_not_required
 from django.db import transaction
 from django.http import Http404
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_GET, require_POST
 
+from . import invites as invite_logic
 from .avatar import AvatarError, remove_avatar, save_avatar
-from .forms import ProfileForm, UserForm
-from .models import display_name
+from .forms import AcceptInviteForm, InviteForm, ProfileForm, UserForm
+from .models import Invite, display_name
 
 
 def account(request):
@@ -69,3 +70,70 @@ def public_avatar(request, username):
     if not user.profile.avatar:
         raise Http404
     return file_response(user.profile.avatar)
+
+
+# Invites ---------------------------------------------------------------------
+
+def invites(request):
+    form = InviteForm(request.POST or None, user=request.user)
+    if request.method == "POST" and form.is_valid():
+        email, trip = form.cleaned_data["email"], form.cleaned_data["trip"]
+        try:
+            kind, obj = invite_logic.invite(request.user, email, trip)
+        except invite_logic.InviteError as exc:
+            form.add_error(None, str(exc))
+        else:
+            if kind == "added":
+                messages.success(request, f"{display_name(obj)} already has an account and was added to “{trip}”.")
+            elif kind == "exists":
+                messages.info(request, f"{email} already has an account. Pick a trip to add them to it.")
+            else:
+                messages.success(request, f"Invite sent to {email}.")
+            return redirect("invites")
+    sent = Invite.objects.filter(invited_by=request.user).select_related("trip", "accepted_by")[:50]
+    return render(request, "accounts/invites.html", {"form": form, "sent": sent})
+
+
+def _own_invite(request, pk):
+    return get_object_or_404(Invite, pk=pk, invited_by=request.user, accepted_at__isnull=True)
+
+
+@require_POST
+def invite_resend(request, pk):
+    invite = _own_invite(request, pk)
+    invite_logic.resend(invite)
+    messages.success(request, f"Invite to {invite.email} sent again (valid 14 more days).")
+    return redirect("invites")
+
+
+@require_POST
+def invite_revoke(request, pk):
+    invite = _own_invite(request, pk)
+    invite.delete()
+    messages.success(request, f"Invite to {invite.email} revoked.")
+    return redirect("invites")
+
+
+@login_not_required
+def invite_accept(request, token):
+    invite = invite_logic.valid_invite(token)
+    if invite is None:
+        return render(request, "accounts/invite_invalid.html", status=404)
+    if request.user.is_authenticated:
+        return render(request, "accounts/invite_invalid.html", {"logged_in": True, "invite": invite})
+    form = AcceptInviteForm(request.POST or None, email=invite.email)
+    if request.method == "POST" and form.is_valid():
+        try:
+            user = invite_logic.accept(
+                invite, first_name=form.cleaned_data["first_name"],
+                last_name=form.cleaned_data["last_name"], password=form.cleaned_data["password1"],
+            )
+        except invite_logic.InviteError as exc:
+            form.add_error(None, str(exc))
+        else:
+            login(request, user, backend="allauth.account.auth_backends.AuthenticationBackend")
+            messages.success(request, f"Welcome, {user.first_name}!")
+            return redirect(invite.trip) if invite.trip_id else redirect("home")
+    return render(request, "accounts/invite_accept.html", {
+        "form": form, "invite": invite, "inviter": display_name(invite.invited_by), "hide_login": True,
+    })

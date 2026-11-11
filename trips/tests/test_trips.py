@@ -44,6 +44,7 @@ class TripModelTests(MediaRootTestCase):
         response = self.client.post("/trips/new/", {
             "title": "Sri Lanka", "start_date": "2026-12-21", "end_date": "2027-01-10",
             "timezone": "Asia/Colombo", "new_companions": "Marta, Joost", "share_enabled": "on",
+            "travellers": [self.user.pk],
         })
         trip = Trip.objects.get(title="Sri Lanka")
         self.assertRedirects(response, f"/trips/{trip.pk}/")
@@ -126,10 +127,10 @@ class ChapterTests(MediaRootTestCase):
         loose = Entry.objects.create(trip=trip, author=self.user, occurred_at="2026-12-21T10:00Z",
                                      is_public=False)
         timeline = build_timeline(trip)
-        self.assertEqual([(c, [e.pk for e in es]) for c, es in timeline],
+        self.assertEqual([(s.chapter, [e.pk for e in s.entries]) for s in timeline],
                          [(None, [loose.pk]), (kandy, [early.pk, late.pk])])
         public = build_timeline(trip, public_only=True)
-        self.assertEqual([(c, [e.pk for e in es]) for c, es in public], [(kandy, [early.pk, late.pk])])
+        self.assertEqual([(s.chapter, [e.pk for e in s.entries]) for s in public], [(kandy, [early.pk, late.pk])])
 
     def test_entry_chapter_must_belong_to_trip(self):
         """protects=an entry can't be filed under another trip's chapter;

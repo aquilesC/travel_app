@@ -1,0 +1,4 @@
+Hi,
+
+{{ inviter }} added you to "{{ trip.title }}" on Trips. You can now see and edit it:
+{{ trip_url }}

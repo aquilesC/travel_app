@@ -1,0 +1,19 @@
+<nav class="story-bar" aria-label="Trip navigation">
+  {% if timeline|length > 1 or timeline.0.chapter %}
+  <details class="chapter-menu">
+    <summary><span class="current-chapter">Chapters</span></summary>
+    <ol>
+      {% for section in timeline %}{% if section.chapter %}
+      <li><a href="#chapter-{{ section.chapter.pk }}" data-chapter-link="{{ section.chapter.pk }}">{{ section.chapter.title }}</a>
+        <span class="muted">{{ section.entries|length }}</span></li>
+      {% endif %}{% endfor %}
+    </ol>
+  </details>
+  {% endif %}
+  <span class="spacer"></span>
+  <span class="js-only" hidden>
+    <button type="button" data-nav="prev" title="Previous entry (k)" aria-label="Previous entry">↑</button>
+    <button type="button" data-nav="next" title="Next entry (j)" aria-label="Next entry">↓</button>
+    <button type="button" class="map-toggle" aria-pressed="true">Map</button>
+  </span>
+</nav>

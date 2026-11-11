@@ -37,7 +37,7 @@ def heic_upload(size=(3000, 2000)):
 
 
 def account_post(**extra):
-    return {"first_name": "Aquiles", "last_name": "C", "email": "a@example.com",
+    return {"first_name": "Aquiles", "last_name": "C", "username": "aquiles",
             "whatsapp_number": "", "is_public": "on", **extra}
 
 
@@ -83,12 +83,12 @@ class AccountPageTests(MediaRootMixin, TestCase):
         """protects=AC9.4: wrong old password fails; right one works and keeps the session;
         fails_when=the password changes without the old one, or the user is logged out;
         no_claim=password reset by email (not offered)."""
-        bad = self.client.post("/accounts/password_change/", {
-            "old_password": "nope", "new_password1": "Fresh-Pass-2026", "new_password2": "Fresh-Pass-2026"})
+        bad = self.client.post("/accounts/password/change/", {
+            "oldpassword": "nope", "password1": "Fresh-Pass-2026", "password2": "Fresh-Pass-2026"})
         self.assertEqual(bad.status_code, 200)
-        good = self.client.post("/accounts/password_change/", {
-            "old_password": "old-Secret-1", "new_password1": "Fresh-Pass-2026", "new_password2": "Fresh-Pass-2026"})
-        self.assertRedirects(good, "/accounts/password_change/done/")
+        good = self.client.post("/accounts/password/change/", {
+            "oldpassword": "old-Secret-1", "password1": "Fresh-Pass-2026", "password2": "Fresh-Pass-2026"})
+        self.assertEqual(good.status_code, 302)
         self.user.refresh_from_db()
         self.assertTrue(self.user.check_password("Fresh-Pass-2026"))
         self.assertEqual(self.client.get("/account/").status_code, 200)  # still logged in

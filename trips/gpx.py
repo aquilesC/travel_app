@@ -77,8 +77,9 @@ def track_feature(track):
     }
 
 
-def map_data(trip, public_only):
-    """GeoJSON for the trip map: tracks, entry check-ins, and the path between them."""
+def map_data(trip, public_only, media_url=None):
+    """GeoJSON for the trip map: tracks, entry check-ins, the path between them, and
+    every located photo (with a thumbnail URL from `media_url(media, variant)`)."""
     features = [track_feature(t) for t in trip.tracks.all()]
 
     entries = trip.entries.prefetch_related("media")
@@ -86,11 +87,9 @@ def map_data(trip, public_only):
         entries = entries.filter(is_public=True)
     points = []
     for entry in entries.order_by("occurred_at", "id"):
-        located = [(entry.latitude, entry.longitude)] if entry.has_location else [
-            (m.latitude, m.longitude) for m in entry.media.all() if m.latitude is not None
-        ][:1]
-        for lat, lon in located:
-            coordinates = [float(lon), float(lat)]
+        point = entry.map_point()
+        if point:
+            coordinates = [point[1], point[0]]
             points.append(coordinates)
             features.append({
                 "type": "Feature",
@@ -100,6 +99,17 @@ def map_data(trip, public_only):
                     "title": entry.place_name or entry.body[:60],
                     "anchor": f"#entry-{entry.pk}",
                 },
+            })
+        if media_url is None:
+            continue
+        for media in entry.media.all():
+            if media.kind != "photo" or media.status != "ready" or media.latitude is None:
+                continue
+            features.append({
+                "type": "Feature",
+                "geometry": {"type": "Point", "coordinates": [float(media.longitude), float(media.latitude)]},
+                "properties": {"kind": "photo", "media_id": media.pk, "entry_id": entry.pk,
+                               "thumb": media_url(media, "sm")},
             })
     if len(points) > 1:
         features.append({

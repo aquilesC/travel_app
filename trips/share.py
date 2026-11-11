@@ -3,6 +3,7 @@
 from django.contrib.auth.decorators import login_not_required
 from django.http import Http404, JsonResponse
 from django.shortcuts import get_object_or_404, render
+from django.urls import reverse
 from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_GET, require_http_methods, require_POST
@@ -39,7 +40,9 @@ def share_trip(request, token):
 def share_map_data(request, token):
     from .gpx import map_data
 
-    return JsonResponse(map_data(shared_trip(token), public_only=True))
+    return JsonResponse(map_data(
+        shared_trip(token), public_only=True,
+        media_url=lambda m, v: reverse("share_media", args=[token, m.pk, v])))
 
 
 @login_not_required

@@ -1,5 +1,19 @@
 {% load static %}
-<div id="trip-map" class="map" data-url="{{ map_url }}" aria-label="Map of the trip"></div>
+<aside class="map-pane">
+  <div id="trip-map" class="map" data-url="{{ map_url }}" aria-label="Map of the trip"></div>
+</aside>
+<dialog class="viewer" aria-label="Photo viewer">
+  <div class="viewer-stage"></div>
+  <button type="button" class="viewer-close" aria-label="Close">✕</button>
+  <button type="button" class="viewer-prev" aria-label="Previous">‹</button>
+  <button type="button" class="viewer-next" aria-label="Next">›</button>
+  <div class="viewer-caption">
+    <span class="viewer-count"></span>
+    <span class="viewer-meta"></span>
+    <button type="button" class="viewer-goto link">Go to entry</button>
+  </div>
+</dialog>
 <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@5.6.0/dist/maplibre-gl.css">
 <script src="https://unpkg.com/maplibre-gl@5.6.0/dist/maplibre-gl.js" defer></script>
+<script src="{% static 'js/reader.js' %}" defer></script>
 <script src="{% static 'js/trip-map.js' %}" defer></script>

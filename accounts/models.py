@@ -42,6 +42,40 @@ class Profile(models.Model):
         return f"Profile of {self.user}"
 
 
+class Invite(models.Model):
+    VALID_DAYS = 14
+
+    email = models.EmailField()
+    invited_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE,
+                                   related_name="invites_sent")
+    trip = models.ForeignKey("trips.Trip", null=True, blank=True, on_delete=models.SET_NULL)
+    token = models.CharField(max_length=43, unique=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    expires_at = models.DateTimeField()
+    accepted_at = models.DateTimeField(null=True, blank=True)
+    accepted_by = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True,
+                                    on_delete=models.SET_NULL, related_name="+")
+
+    class Meta:
+        ordering = ["-created_at"]
+
+    def __str__(self):
+        return f"Invite for {self.email}"
+
+    @property
+    def status(self):
+        from django.utils import timezone
+
+        if self.accepted_at:
+            return "accepted"
+        return "expired" if self.expires_at < timezone.now() else "pending"
+
+    def url(self):
+        from django.urls import reverse
+
+        return settings.SITE_URL + reverse("invite_accept", args=[self.token])
+
+
 def display_name(user):
     return user.get_full_name() or user.username
 

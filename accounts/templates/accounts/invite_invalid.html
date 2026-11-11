@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block title %}Invite{% endblock %}
+{% block meta %}<meta name="robots" content="noindex, nofollow">{% endblock %}
+{% block main_class %}auth-page{% endblock %}
+{% block content %}
+{% if logged_in %}
+  <h1>You're already logged in</h1>
+  <p>This invite is for <strong>{{ invite.email }}</strong>. Log out first if you want to accept it
+    with that address.</p>
+  <form method="post" action="{% url 'account_logout' %}">{% csrf_token %}<button class="primary">Log out</button></form>
+{% else %}
+  <h1>This invite is no longer valid</h1>
+  <p>It may have been used already, revoked, or it expired (invites last 14 days).
+    Ask the person who invited you to send a new one.</p>
+  <p>Already have an account? <a href="{% url 'account_login' %}">Log in</a> or
+    <a href="{% url 'account_reset_password' %}">reset your password</a>.</p>
+{% endif %}
+{% endblock %}
