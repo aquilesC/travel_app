@@ -53,6 +53,7 @@ INSTALLED_APPS = [
     "django_tasks_db",
     "allauth",
     "allauth.account",
+    "allauth.headless",
     "accounts",
     "trips",
 ]
@@ -155,6 +156,11 @@ ACCOUNT_LOGOUT_ON_PASSWORD_CHANGE = False
 ACCOUNT_SESSION_REMEMBER = True
 ACCOUNT_EMAIL_SUBJECT_PREFIX = "[Trips] "
 ACCOUNT_DEFAULT_HTTP_PROTOCOL = "https"
+
+# allauth headless API for the iPhone app: /_allauth/app/v1/... with session tokens
+# (X-Session-Token header). Browser pages keep using the normal allauth views.
+HEADLESS_CLIENTS = ("app",)
+HEADLESS_ONLY = False
 
 
 # Internationalization
