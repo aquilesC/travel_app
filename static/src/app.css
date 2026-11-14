@@ -1,0 +1,60 @@
+/* Tailwind entry point (v4 #29). Built by the standalone CLI into static/css/tailwind.css
+   (Dockerfile "css" stage; `docker compose --profile dev up tailwind` to watch while editing).
+
+   Preflight (Tailwind's reset) is left out while pages still use the old styles in
+   static/css/legacy.css; #30 turns it on and deletes legacy.css. */
+@layer theme, base, components, utilities;
+@import "tailwindcss/theme.css" layer(theme);
+@import "tailwindcss/utilities.css" layer(utilities);
+
+@source "../../templates";
+@source "../../trips/templates";
+@source "../../accounts/templates";
+@source "../js";
+@source "../../trips/templatetags";
+@source "../../accounts/forms.py";
+@source "../../trips/forms.py";
+
+/* Design tokens: today's colours and fonts. Utilities read them as bg-page, text-ink,
+   border-line, text-accent… and they switch with the system's dark mode. */
+@theme {
+  --color-page: #faf8f5;
+  --color-ink: #1f2328;
+  --color-muted: #6b7280;
+  --color-card: #fff;
+  --color-line: #e5e1da;
+  --color-accent: #0f766e;
+  --color-danger: #b91c1c;
+  --color-warn: #fff7e6;
+  --font-serif: Georgia, "Iowan Old Style", serif;
+  --font-sans: system-ui, sans-serif;
+}
+
+@layer theme {
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --color-page: #15171a;
+      --color-ink: #e8e6e3;
+      --color-muted: #9ca3af;
+      --color-card: #1e2125;
+      --color-line: #2f343a;
+      --color-accent: #2dd4bf;
+      --color-danger: #f87171;
+      --color-warn: #2a2416;
+    }
+  }
+}
+
+/* The few patterns repeated on many pages. Everything else is utilities in the templates. */
+@layer components {
+  .btn {
+    @apply inline-block cursor-pointer rounded-md border border-line bg-card px-3 py-1.5 font-sans text-[15px] text-ink no-underline;
+  }
+  .btn-primary { @apply border-accent bg-accent text-white; }
+  .btn-danger { @apply text-danger; }
+  .btn-link { @apply border-0 bg-transparent p-0 text-accent; }
+  .btn-big { @apply px-[22px] py-[11px] text-[17px]; }
+  .field-input {
+    @apply w-full rounded-md border border-line bg-card p-2 font-sans text-base text-ink;
+  }
+}

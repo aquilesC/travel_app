@@ -27,7 +27,8 @@
       <button type="submit" class="primary">Subscribe</button>
     </form>
   </div>
-  {% url 'share_map_data' share_token as map_url %}
-  {% include "trips/_map.html" with map_url=map_url %}
+  {% url 'api-v1:share_map' share_token as map_url %}
+  {% if trip.live_share == "link" %}{% url 'api-v1:share_live' share_token as live_url %}{% endif %}
+  {% include "trips/_map.html" with map_url=map_url live_url=live_url %}
 </div>
 {% endblock %}

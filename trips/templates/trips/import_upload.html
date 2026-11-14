@@ -11,7 +11,7 @@
   {% if count %}<p class="ok">{{ count }} file{{ count|pluralize }} uploaded so far.</p>{% endif %}
 
   <div class="card uploader" id="uploader"
-       data-start-url="{% url 'batch_upload_start' batch.pk %}"
+       data-target='{"batch_id": "{{ batch.pk }}"}'
        data-done-url="{% url 'import_review' batch.pk %}">
     <label>Photos and videos <input type="file" multiple accept="image/*,video/*,.heic,.heif"></label>
     <ul class="upload-progress plain"></ul>

@@ -2,7 +2,7 @@ from zoneinfo import available_timezones
 
 from django import forms
 
-from .models import Chapter, Entry, Person, Track, Trip
+from .models import Chapter, Entry, Track, Trip
 
 TIMEZONE_CHOICES = [(tz, tz) for tz in sorted(available_timezones()) if "/" in tz or tz == "UTC"]
 DATETIME_LOCAL = "%Y-%m-%dT%H:%M"
@@ -18,7 +18,8 @@ class TripForm(forms.ModelForm):
     class Meta:
         model = Trip
         fields = ["title", "start_date", "end_date", "timezone", "description",
-                  "travellers", "companions", "share_enabled"]
+                  "travellers", "companions", "share_enabled",
+                  "live_share", "live_delay_minutes", "live_round_m"]
         widgets = {
             "start_date": forms.DateInput(attrs={"type": "date"}, format="%Y-%m-%d"),
             "end_date": forms.DateInput(attrs={"type": "date"}, format="%Y-%m-%d"),
@@ -44,21 +45,31 @@ class TripForm(forms.ModelForm):
         self.fields["travellers"].help_text = "Members can see and edit this trip. Invite new people from “Invite”."
         if not self.instance.pk:
             self.initial.setdefault("travellers", [user.pk])
+        for name in self.LIVE_FIELDS:  # older clients don't send these: keep the current value
+            self.fields[name].required = False
+
+    LIVE_FIELDS = ("live_share", "live_delay_minutes", "live_round_m")
+
+    def _clean_live(self, name):
+        value = self.cleaned_data.get(name)
+        if value in (None, ""):
+            return getattr(self.instance, name)
+        return value
+
+    def clean_live_share(self):
+        return self._clean_live("live_share")
+
+    def clean_live_delay_minutes(self):
+        return self._clean_live("live_delay_minutes")
+
+    def clean_live_round_m(self):
+        return self._clean_live("live_round_m")
 
     def clean_travellers(self):
         travellers = self.cleaned_data["travellers"]
         if not travellers:
             raise forms.ValidationError("A trip needs at least one member.")
         return travellers
-
-    def save(self, commit=True):
-        trip = super().save(commit=commit)
-        names = [n.strip() for n in self.cleaned_data.get("new_companions", "").split(",") if n.strip()]
-        if names and commit:
-            for name in names:
-                person, _ = Person.objects.get_or_create(name=name)
-                trip.companions.add(person)
-        return trip
 
 
 class ChapterForm(forms.ModelForm):

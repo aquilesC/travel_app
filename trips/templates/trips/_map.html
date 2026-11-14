@@ -1,6 +1,6 @@
 {% load static %}
 <aside class="map-pane">
-  <div id="trip-map" class="map" data-url="{{ map_url }}" aria-label="Map of the trip"></div>
+  <div id="trip-map" class="map" data-url="{{ map_url }}"{% if live_url %} data-live-url="{{ live_url }}"{% endif %} aria-label="Map of the trip"></div>
 </aside>
 <dialog class="viewer" aria-label="Photo viewer">
   <div class="viewer-stage"></div>

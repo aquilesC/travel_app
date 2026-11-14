@@ -54,6 +54,22 @@ class Trip(models.Model):
     )
     share_token = models.CharField(max_length=32, unique=True, default=new_token)
     share_enabled = models.BooleanField(default=True)
+    # Live location from the iPhone app (v4 #27).
+    LIVE_OFF, LIVE_MEMBERS, LIVE_LINK = "off", "members", "link"
+    LIVE_CHOICES = [(LIVE_OFF, "Nobody"), (LIVE_MEMBERS, "Members only"),
+                    (LIVE_LINK, "Members, and everyone with the share link")]
+    live_share = models.CharField(
+        "Who sees where we are now", max_length=10, choices=LIVE_CHOICES, default=LIVE_MEMBERS,
+        help_text="Members always see exact positions. Share-link viewers get the delay and rounding below.",
+    )
+    live_delay_minutes = models.PositiveIntegerField(
+        "Delay for the share link (minutes)", default=60,
+        help_text="Share-link viewers see where you were this long ago.",
+    )
+    live_round_m = models.PositiveIntegerField(
+        "Rounding for the share link (metres)", default=1000,
+        help_text="Share-link viewers see positions snapped to a grid this coarse. 0 = exact.",
+    )
     created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -109,7 +125,8 @@ class Chapter(models.Model):
 class Entry(models.Model):
     SOURCE_WEB = "web"
     SOURCE_WHATSAPP = "whatsapp"
-    SOURCES = [(SOURCE_WEB, "web"), (SOURCE_WHATSAPP, "WhatsApp")]
+    SOURCE_APP = "app"
+    SOURCES = [(SOURCE_WEB, "web"), (SOURCE_WHATSAPP, "WhatsApp"), (SOURCE_APP, "iPhone app")]
 
     trip = models.ForeignKey(Trip, on_delete=models.CASCADE, related_name="entries")
     chapter = models.ForeignKey(Chapter, null=True, blank=True, on_delete=models.SET_NULL)
@@ -123,12 +140,15 @@ class Entry(models.Model):
         default=True, help_text="Public entries appear on the share link and in emails."
     )
     source = models.CharField(max_length=10, choices=SOURCES, default=SOURCE_WEB)
+    # Set by the app so a retried post doesn't create a second entry (v4 #24).
+    client_id = models.UUIDField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
         ordering = ["occurred_at", "id"]
         verbose_name_plural = "entries"
+        constraints = [models.UniqueConstraint(fields=["author", "client_id"], name="entry_unique_client_id")]
 
     def __str__(self):
         return f"{self.trip}: {self.occurred_at:%Y-%m-%d %H:%M}"
@@ -136,6 +156,10 @@ class Entry(models.Model):
     def clean(self):
         if (self.latitude is None) != (self.longitude is None):
             raise ValidationError("Give both latitude and longitude, or neither.")
+        if self.latitude is not None and not -90 <= self.latitude <= 90:
+            raise ValidationError({"latitude": "Latitude must be between -90 and 90."})
+        if self.longitude is not None and not -180 <= self.longitude <= 180:
+            raise ValidationError({"longitude": "Longitude must be between -180 and 180."})
         if self.chapter_id and self.chapter.trip_id != self.trip_id:
             raise ValidationError({"chapter": "That chapter belongs to another trip."})
 
@@ -214,17 +238,29 @@ class Media(models.Model):
 
 
 class Upload(models.Model):
-    """An in-progress chunked upload (see static/js/upload.js)."""
+    """A chunked upload (API: /api/v1/uploads, used by static/js/upload.js and the app).
+
+    At most one of entry (entry editor) or batch (bulk import) is set. With neither, the
+    upload is "detached": once complete it waits until an entry claims it (the app uploads
+    media before posting the entry, v4 #24/#25). Unclaimed ones are deleted after a week.
+    """
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4)
-    # Exactly one of entry (entry editor) or batch (bulk import) is set.
     entry = models.ForeignKey(Entry, null=True, blank=True, on_delete=models.CASCADE, related_name="uploads")
     batch = models.ForeignKey("ImportBatch", null=True, blank=True, on_delete=models.CASCADE,
                               related_name="uploads")
+    trip = models.ForeignKey(Trip, null=True, blank=True, on_delete=models.CASCADE, related_name="+",
+                             help_text="For detached uploads: the trip it's meant for.")
     filename = models.CharField(max_length=255)
     size = models.BigIntegerField()
+    sha256 = models.CharField(max_length=64, blank=True, help_text="Announced by the client; checked on completion.")
+    client_id = models.UUIDField(null=True, blank=True)
+    completed_at = models.DateTimeField(null=True, blank=True)
     created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        constraints = [models.UniqueConstraint(fields=["created_by", "client_id"], name="upload_unique_client_id")]
 
     @property
     def temp_path(self):
@@ -248,10 +284,13 @@ class ImportBatch(models.Model):
                              related_name="imports")
     created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     status = models.CharField(max_length=10, default=OPEN)
+    client_id = models.UUIDField(null=True, blank=True)  # the app's retry key (v4 #28)
+    entry_ids = models.JSONField(default=list, blank=True)  # filled on commit, so a retry gets the same answer
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         ordering = ["-created_at"]
+        constraints = [models.UniqueConstraint(fields=["created_by", "client_id"], name="importbatch_unique_client_id")]
 
     def __str__(self):
         return f"Import into {self.trip or 'a new trip'} ({self.items.count()} files)"
@@ -351,3 +390,39 @@ class ScheduledRun(models.Model):
 
     name = models.CharField(max_length=50, unique=True)
     last_run_date = models.DateField()
+
+
+class Position(models.Model):
+    """A point recorded by a traveller's phone (iPhone app, v4 #26). GPX tracks stay separate."""
+
+    trip = models.ForeignKey(Trip, on_delete=models.CASCADE, related_name="positions")
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="positions")
+    recorded_at = models.DateTimeField()
+    latitude = models.DecimalField(max_digits=9, decimal_places=6)
+    longitude = models.DecimalField(max_digits=9, decimal_places=6)
+    accuracy_m = models.FloatField(null=True, blank=True)
+    altitude_m = models.FloatField(null=True, blank=True)
+    speed_mps = models.FloatField(null=True, blank=True)
+    received_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["recorded_at"]
+        constraints = [
+            models.UniqueConstraint(fields=["user", "recorded_at"], name="position_unique_user_time"),
+        ]
+        indexes = [models.Index(fields=["trip", "user", "recorded_at"], name="position_trip_user_time")]
+
+    def __str__(self):
+        return f"{self.user} @ {self.recorded_at:%Y-%m-%d %H:%M:%S}"
+
+
+class Tombstone(models.Model):
+    """Remembers deleted entries so the app's incremental sync can drop them (v4 #23)."""
+
+    trip_id = models.IntegerField(db_index=True)  # plain int: the trip itself may be gone
+    model = models.CharField(max_length=20)  # "entry"
+    object_id = models.IntegerField()
+    deleted_at = models.DateTimeField(auto_now_add=True, db_index=True)
+
+    def __str__(self):
+        return f"{self.model} {self.object_id} deleted {self.deleted_at:%Y-%m-%d %H:%M}"

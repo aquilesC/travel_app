@@ -234,3 +234,11 @@ dialog.viewer::backdrop { background: rgba(0,0,0,.85); }
 .lost-compass .needle { transform-origin: 60px 60px; animation: wobble 4s ease-in-out infinite; }
 @keyframes wobble { 0% { rotate: -35deg; } 30% { rotate: 50deg; } 55% { rotate: -20deg; } 80% { rotate: 25deg; } 100% { rotate: -35deg; } }
 @media (prefers-reduced-motion: reduce) { .lost-compass .needle { animation: none; } }
+
+/* Live location badge on the map (v4 #27) */
+.map { position: relative; }
+.live-badge {
+  position: absolute; left: 10px; bottom: 10px; z-index: 2; max-width: calc(100% - 20px);
+  padding: 4px 10px; border-radius: 999px; background: var(--card); color: var(--fg);
+  font: 13px system-ui, sans-serif; box-shadow: 0 1px 4px rgba(0,0,0,.2);
+}

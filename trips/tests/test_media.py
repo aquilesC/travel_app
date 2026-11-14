@@ -35,14 +35,15 @@ class UploadTests(MediaRootTestCase):
         self.client.force_login(self.user)
 
     def start(self, filename, size):
-        response = self.client.post(f"/entries/{self.entry.pk}/uploads/",
-                                    {"filename": filename, "size": size}, content_type="application/json")
-        self.assertEqual(response.status_code, 200, response.content)
+        response = self.client.post("/api/v1/uploads",
+                                    {"filename": filename, "size": size, "entry_id": self.entry.pk},
+                                    content_type="application/json")
+        self.assertEqual(response.status_code, 201, response.content)
         return response.json()["id"]
 
     def chunk(self, upload_id, offset, data):
-        return self.client.post(f"/uploads/{upload_id}/chunk/?offset={offset}", data,
-                                content_type="application/octet-stream")
+        return self.client.put(f"/api/v1/uploads/{upload_id}/chunk?offset={offset}", data,
+                               content_type="application/octet-stream")
 
     def test_multi_chunk_upload_is_byte_identical(self):
         """protects=AC3: a file sent in several chunks is stored byte-identical (sha256);
@@ -56,7 +57,7 @@ class UploadTests(MediaRootTestCase):
             response = self.chunk(upload_id, offset, part)
             self.assertEqual(response.status_code, 200)
             offset = response.json()["received"]
-        response = self.client.post(f"/uploads/{upload_id}/complete/")
+        response = self.client.post(f"/api/v1/uploads/{upload_id}/complete")
         self.assertEqual(response.status_code, 200, response.content)
         media = Media.objects.get(pk=response.json()["media_id"])
         stored = (self.media_root / media.original.name).read_bytes()
@@ -73,8 +74,8 @@ class UploadTests(MediaRootTestCase):
         self.assertEqual(self.chunk(upload_id, 0, b"12345").status_code, 200)
         retry = self.chunk(upload_id, 0, b"12345")
         self.assertEqual(retry.status_code, 409)
-        self.assertEqual(retry.json()["received"], 5)
-        self.assertEqual(self.client.get(f"/uploads/{upload_id}/").json()["received"], 5)
+        self.assertEqual(retry.json()["error"]["received"], 5)
+        self.assertEqual(self.client.get(f"/api/v1/uploads/{upload_id}").json()["received"], 5)
 
     def test_incomplete_and_oversized(self):
         """protects=only complete uploads become media; size announced up front is enforced;
@@ -82,8 +83,8 @@ class UploadTests(MediaRootTestCase):
         no_claim=the 50 MB chunk cap (Content-Length check, needs a real large body)."""
         upload_id = self.start("a.mp3", 10)
         self.chunk(upload_id, 0, b"12345")
-        self.assertEqual(self.client.post(f"/uploads/{upload_id}/complete/").status_code, 400)
-        self.assertEqual(self.chunk(upload_id, 5, b"123456789").status_code, 400)
+        self.assertEqual(self.client.post(f"/api/v1/uploads/{upload_id}/complete").status_code, 409)
+        self.assertEqual(self.chunk(upload_id, 5, b"123456789").status_code, 422)
         self.assertFalse(Media.objects.exists())
 
     def test_duplicate_rejected_and_unsupported_type(self):
@@ -93,12 +94,13 @@ class UploadTests(MediaRootTestCase):
         for expected in (200, 409):
             upload_id = self.start("song.mp3", 4)
             self.chunk(upload_id, 0, b"abcd")
-            response = self.client.post(f"/uploads/{upload_id}/complete/")
+            response = self.client.post(f"/api/v1/uploads/{upload_id}/complete")
             self.assertEqual(response.status_code, expected)
         self.assertEqual(Media.objects.count(), 1)
-        response = self.client.post(f"/entries/{self.entry.pk}/uploads/",
-                                    {"filename": "virus.exe", "size": 4}, content_type="application/json")
-        self.assertEqual(response.status_code, 400)
+        response = self.client.post("/api/v1/uploads",
+                                    {"filename": "virus.exe", "size": 4, "entry_id": self.entry.pk},
+                                    content_type="application/json")
+        self.assertEqual(response.status_code, 422)
 
     def test_other_users_upload_is_hidden(self):
         """protects=an upload session can only be continued by the user who started it;
@@ -118,13 +120,13 @@ class ProcessingTests(MediaRootTestCase):
 
     def upload(self, path):
         data = Path(path).read_bytes()
-        response = self.client.post(f"/entries/{self.entry.pk}/uploads/",
-                                    {"filename": Path(path).name, "size": len(data)},
+        response = self.client.post("/api/v1/uploads",
+                                    {"filename": Path(path).name, "size": len(data), "entry_id": self.entry.pk},
                                     content_type="application/json")
         upload_id = response.json()["id"]
-        self.client.post(f"/uploads/{upload_id}/chunk/?offset=0", data,
-                         content_type="application/octet-stream")
-        response = self.client.post(f"/uploads/{upload_id}/complete/")
+        self.client.put(f"/api/v1/uploads/{upload_id}/chunk?offset=0", data,
+                        content_type="application/octet-stream")
+        response = self.client.post(f"/api/v1/uploads/{upload_id}/complete")
         self.assertEqual(response.status_code, 200, response.content)
         return Media.objects.get(pk=response.json()["media_id"])  # processed immediately in tests
 

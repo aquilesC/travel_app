@@ -4,7 +4,7 @@ from django import forms
 from django.contrib.auth import get_user_model
 from django.contrib.auth.password_validation import validate_password
 
-from .models import Profile
+from .models import Profile, PrivacyZone
 
 
 class UserForm(forms.ModelForm):
@@ -67,3 +67,12 @@ class AcceptInviteForm(forms.Form):
             except forms.ValidationError as exc:
                 self.add_error("password1", exc)
         return data
+
+
+class PrivacyZoneForm(forms.ModelForm):
+    class Meta:
+        model = PrivacyZone
+        fields = ["label", "latitude", "longitude", "radius_m"]
+        labels = {"radius_m": "Radius (metres)"}
+        widgets = {"latitude": forms.NumberInput(attrs={"step": "0.000001"}),
+                   "longitude": forms.NumberInput(attrs={"step": "0.000001"})}

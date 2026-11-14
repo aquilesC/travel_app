@@ -27,8 +27,10 @@ from django.views.decorators.http import require_POST
 
 from accounts.models import Profile, normalize_whatsapp
 
-from .media import store_original
-from .models import Chapter, Entry, InboundMessage, Trip
+from .models import Entry, InboundMessage, Trip
+from .services import chapters as chapter_service
+from .services import entries as entry_service
+from .services.media import store_original
 
 log = logging.getLogger(__name__)
 
@@ -214,10 +216,7 @@ def apply_message(message, trip, user):
     notes = []
 
     if chapter_title:
-        chapter = Chapter.objects.create(trip=trip, title=chapter_title,
-                                         position=Chapter.next_position(trip))
-        trip.current_chapter = chapter
-        trip.save(update_fields=["current_chapter", "updated_at"])
+        chapter = chapter_service.create_chapter(user, trip, chapter_title, make_current=True)
         notes.append(f"Chapter “{chapter.title}” started in {trip.title}.")
 
     latitude, longitude = _decimal(payload.get("Latitude")), _decimal(payload.get("Longitude"))
@@ -237,17 +236,21 @@ def apply_message(message, trip, user):
         if entry and has_location and entry.has_location:
             entry = None  # a second location is a new check-in
     created = entry is None
-    if created:
-        entry = Entry(trip=trip, chapter=trip.current_chapter, author=user,
-                      occurred_at=received_at, source=Entry.SOURCE_WHATSAPP)
+    fields = {}
     if text:
-        entry.body = f"{entry.body}\n\n{text}".strip()
+        fields["body"] = f"{entry.body if entry else ''}\n\n{text}".strip()
     if has_location:
-        entry.latitude, entry.longitude = latitude, longitude
-        entry.place_name = (payload.get("Label") or payload.get("Address") or entry.place_name)[:200]
+        fields["latitude"], fields["longitude"] = latitude, longitude
+        fields["place_name"] = (payload.get("Label") or payload.get("Address")
+                                or (entry.place_name if entry else ""))[:200]
     if private:
-        entry.is_public = False
-    entry.save()
+        fields["is_public"] = False
+    if created:
+        entry = entry_service.create_entry(user, trip, source=Entry.SOURCE_WHATSAPP,
+                                           chapter=trip.current_chapter, occurred_at=received_at,
+                                           **fields)
+    else:
+        entry = entry_service.update_entry(user, entry, **fields)
 
     for index in range(num_media):
         url = payload.get(f"MediaUrl{index}")

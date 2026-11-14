@@ -63,7 +63,7 @@ class SharePageTests(MediaRootTestCase):
         self.trip.share_enabled = False
         self.trip.save()
         self.assertEqual(self.client.get(self.url()).status_code, 404)
-        self.assertEqual(self.client.get(self.url("map.json")).status_code, 404)
+        self.assertEqual(self.client.get(f"/api/v1/share/{self.trip.share_token}/map").status_code, 404)
 
     def test_unknown_token(self):
         """protects=random tokens reveal nothing;

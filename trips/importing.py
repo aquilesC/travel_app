@@ -21,7 +21,7 @@ from django.db import transaction
 from PIL import ExifTags, Image, UnidentifiedImageError
 
 from .gpx import parse_gpx
-from .media import kind_for, sha256_of
+from .services.media import kind_for, sha256_of
 from .models import Entry, ImportBatch, ImportItem, Media, Track, Trip
 from .processing import probe, probe_metadata
 from .stats import haversine_km
@@ -202,6 +202,17 @@ def track_series(tracks):
     return series
 
 
+def location_series(trip, user=None):
+    """Everything that can place a photo without GPS: the trip's GPX tracks, then the
+    importing user's recorded positions (v4 #26)."""
+    series = track_series(trip.tracks.all())
+    if user is not None:
+        from .services.positions import series_for
+
+        series += series_for(trip, user)
+    return series
+
+
 def gpx_position(series, when):
     for points in series:
         if not (points[0][0] - GPX_TOLERANCE <= when <= points[-1][0] + GPX_TOLERANCE):
@@ -299,7 +310,7 @@ def create_entries(batch, trip, shifts, make_public, author):
     from .tasks import process_media
 
     items = list(batch.items.all())
-    dated, undated = build_points(items, trip.tz, shifts, track_series(trip.tracks.all()))
+    dated, undated = build_points(items, trip.tz, shifts, location_series(trip, author))
     groups = group_points(dated)
     if undated:
         groups.append(undated)
@@ -329,7 +340,8 @@ def create_entries(batch, trip, shifts, make_public, author):
     batch.items.all().delete()  # files now belong to the Media rows
     batch.trip = trip
     batch.status = ImportBatch.DONE
-    batch.save(update_fields=["trip", "status"])
+    batch.entry_ids = [e.pk for e in entries]
+    batch.save(update_fields=["trip", "status", "entry_ids"])
     return entries
 
 

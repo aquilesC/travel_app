@@ -21,7 +21,7 @@
   <hr>
   <h2>Photos, videos & audio</h2>
   <p class="muted">Full-resolution originals are kept. Items marked “travel copy” came from WhatsApp in reduced quality; upload the original and remove the copy.</p>
-  <ul class="media-list" id="media-list" data-status-url="{% url 'media_status' entry.pk %}">
+  <ul class="media-list" id="media-list" data-status-url="{% url 'api-v1:entry_detail' entry.pk %}">
     {% for m in entry.media.all %}
     <li data-status="{{ m.status }}">
       <span class="thumb">
@@ -51,7 +51,7 @@
     {% endfor %}
   </ul>
 
-  <div class="card uploader" id="uploader" data-start-url="{% url 'upload_start' entry.pk %}">
+  <div class="card uploader" id="uploader" data-target='{"entry_id": {{ entry.pk }}}'>
     <label>Add files <input type="file" multiple accept="image/*,video/*,audio/*,.heic,.heif"></label>
     <ul class="upload-progress plain"></ul>
   </div>

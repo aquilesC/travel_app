@@ -9,7 +9,9 @@ from django.tasks import task
 @task
 def nightly_backup():
     from .backup import dump_database
+    from .services.uploads import delete_stale_uploads
 
+    delete_stale_uploads()  # nightly housekeeping rides along with the backup
     return str(dump_database())
 
 

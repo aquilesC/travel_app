@@ -5,6 +5,8 @@ from . import views
 urlpatterns = [
     path("account/", views.account, name="account"),
     path("account/picture/remove/", views.avatar_remove, name="avatar_remove"),
+    path("account/privacy-zones/", views.privacy_zone_add, name="privacy_zone_add"),
+    path("account/privacy-zones/<int:pk>/delete/", views.privacy_zone_delete, name="privacy_zone_delete"),
     path("invites/", views.invites, name="invites"),
     path("invites/<int:pk>/resend/", views.invite_resend, name="invite_resend"),
     path("invites/<int:pk>/revoke/", views.invite_revoke, name="invite_revoke"),

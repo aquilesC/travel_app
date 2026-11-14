@@ -4,12 +4,13 @@ from django.contrib.auth.decorators import login_not_required
 from django.db import transaction
 from django.http import Http404
 from django.shortcuts import get_object_or_404, redirect, render
+from django.urls import reverse
 from django.views.decorators.http import require_GET, require_POST
 
 from . import invites as invite_logic
 from .avatar import AvatarError, remove_avatar, save_avatar
-from .forms import AcceptInviteForm, InviteForm, ProfileForm, UserForm
-from .models import Invite, display_name
+from .forms import AcceptInviteForm, InviteForm, PrivacyZoneForm, ProfileForm, UserForm
+from .models import Invite, PrivacyZone, display_name
 
 
 def account(request):
@@ -31,7 +32,27 @@ def account(request):
             return redirect("account")
     return render(request, "accounts/account.html", {
         "user_form": user_form, "profile_form": profile_form, "profile": profile,
+        "zones": request.user.privacy_zones.all(), "zone_form": PrivacyZoneForm(),
     })
+
+
+@require_POST
+def privacy_zone_add(request):
+    form = PrivacyZoneForm(request.POST, instance=PrivacyZone(user=request.user))
+    if form.is_valid():
+        form.save()
+        messages.success(request, f"Privacy zone “{form.instance.label}” added.")
+    else:
+        errors = "; ".join(e for errs in form.errors.values() for e in errs)
+        messages.error(request, f"Couldn't add the zone: {errors}")
+    return redirect(reverse("account") + "#privacy-zones")
+
+
+@require_POST
+def privacy_zone_delete(request, pk):
+    get_object_or_404(PrivacyZone, pk=pk, user=request.user).delete()
+    messages.success(request, "Privacy zone removed.")
+    return redirect(reverse("account") + "#privacy-zones")
 
 
 @require_POST

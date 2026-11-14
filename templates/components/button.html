@@ -1,0 +1,3 @@
+{# {% include "components/button.html" with label="Save" kind="primary" href=url type="submit" %} #}
+{% if href %}<a href="{{ href }}" class="btn{% if kind %} btn-{{ kind }}{% endif %}">{{ label }}</a>
+{% else %}<button type="{{ type|default:'button' }}" class="btn{% if kind %} btn-{{ kind }}{% endif %}">{{ label }}</button>{% endif %}

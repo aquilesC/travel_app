@@ -14,6 +14,11 @@
         {% if trip.companions.all %} · with {{ trip.companions.all|join:", " }}{% endif %}
       </p>
       {% if trip.description %}<div class="body">{{ trip.description|markdown }}</div>{% endif %}
+      {% if recorded_today %}
+      <p class="muted recorded">Recorded by app today:
+        {% for name, km in recorded_today %}{{ name }} {{ km|floatformat:1 }} km{% if not forloop.last %} · {% endif %}{% endfor %}
+        · <a href="{% url 'api-v1:positions_gpx' trip.pk %}">GPX</a></p>
+      {% endif %}
       <div class="actions">
         <a class="button primary" href="{% url 'entry_create' trip.pk %}">+ Entry</a>
         <form method="post" action="{% url 'trip_import_start' trip.pk %}" class="inline">{% csrf_token %}<button type="submit">+ Photos</button></form>
@@ -42,7 +47,8 @@
       <label for="id_title">New chapter</label> {{ chapter_form.title }} <button>Add chapter</button>
     </form>
   </div>
-  {% url 'trip_map_data' trip.pk as map_url %}
-  {% include "trips/_map.html" with map_url=map_url %}
+  {% url 'api-v1:trip_map' trip.pk as map_url %}
+  {% if trip.live_share != "off" %}{% url 'api-v1:trip_live' trip.pk as live_url %}{% endif %}
+  {% include "trips/_map.html" with map_url=map_url live_url=live_url %}
 </div>
 {% endblock %}

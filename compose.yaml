@@ -73,6 +73,18 @@ services:
       # Only reachable from this machine; the public route is the Cloudflare tunnel.
       - "127.0.0.1:${WEB_PORT:-8000}:80"
 
+  # Development only: rebuilds static/css/tailwind.css whenever a template changes.
+  #   docker compose --profile dev up tailwind
+  tailwind:
+    profiles: ["dev"]
+    build:
+      context: .
+      target: css
+    working_dir: /app
+    volumes:
+      - .:/app
+    command: ["tailwindcss", "-i", "static/src/app.css", "-o", "static/css/tailwind.css", "--watch=always"]
+
 volumes:
   postgres_data:
   media:

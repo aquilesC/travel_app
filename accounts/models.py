@@ -83,3 +83,30 @@ def display_name(user):
 def create_profile(sender, instance, created, **kwargs):
     if created:
         Profile.objects.get_or_create(user=instance)
+
+
+class PrivacyZone(models.Model):
+    """A circle (e.g. home) where the user's recorded positions are never shown (v4 #27)."""
+
+    MIN_RADIUS_M = 200
+
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="privacy_zones")
+    label = models.CharField(max_length=60, default="Home")
+    latitude = models.DecimalField(max_digits=9, decimal_places=6)
+    longitude = models.DecimalField(max_digits=9, decimal_places=6)
+    radius_m = models.PositiveIntegerField(default=500)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["created_at"]
+
+    def __str__(self):
+        return f"{self.label} ({self.radius_m} m)"
+
+    def clean(self):
+        if self.radius_m is not None and self.radius_m < self.MIN_RADIUS_M:
+            raise ValidationError({"radius_m": f"Use at least {self.MIN_RADIUS_M} m."})
+        if self.latitude is not None and not -90 <= self.latitude <= 90:
+            raise ValidationError({"latitude": "Latitude must be between -90 and 90."})
+        if self.longitude is not None and not -180 <= self.longitude <= 180:
+            raise ValidationError({"longitude": "Longitude must be between -180 and 180."})

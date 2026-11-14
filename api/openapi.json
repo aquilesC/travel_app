@@ -1,0 +1,2907 @@
+{
+  "components": {
+    "schemas": {
+      "BatchIn": {
+        "properties": {
+          "points": {
+            "items": {
+              "$ref": "#/components/schemas/PointIn"
+            },
+            "maxItems": 5000,
+            "title": "Points",
+            "type": "array"
+          }
+        },
+        "required": [
+          "points"
+        ],
+        "title": "BatchIn",
+        "type": "object"
+      },
+      "BatchOut": {
+        "properties": {
+          "accepted": {
+            "title": "Accepted",
+            "type": "integer"
+          },
+          "duplicates": {
+            "title": "Duplicates",
+            "type": "integer"
+          },
+          "rejected": {
+            "items": {
+              "$ref": "#/components/schemas/Rejected"
+            },
+            "title": "Rejected",
+            "type": "array"
+          }
+        },
+        "required": [
+          "accepted",
+          "duplicates",
+          "rejected"
+        ],
+        "title": "BatchOut",
+        "type": "object"
+      },
+      "ChapterIn": {
+        "properties": {
+          "make_current": {
+            "default": false,
+            "description": "New posts from the app and WhatsApp go into it.",
+            "title": "Make Current",
+            "type": "boolean"
+          },
+          "title": {
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "title"
+        ],
+        "title": "ChapterIn",
+        "type": "object"
+      },
+      "ChapterOut": {
+        "properties": {
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "position": {
+            "title": "Position",
+            "type": "integer"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "position"
+        ],
+        "title": "ChapterOut",
+        "type": "object"
+      },
+      "ChapterPatch": {
+        "properties": {
+          "title": {
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "title"
+        ],
+        "title": "ChapterPatch",
+        "type": "object"
+      },
+      "ChunkOut": {
+        "properties": {
+          "received": {
+            "title": "Received",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "received"
+        ],
+        "title": "ChunkOut",
+        "type": "object"
+      },
+      "CommitIn": {
+        "properties": {
+          "make_public": {
+            "default": true,
+            "title": "Make Public",
+            "type": "boolean"
+          }
+        },
+        "title": "CommitIn",
+        "type": "object"
+      },
+      "CommitOut": {
+        "properties": {
+          "entry_ids": {
+            "items": {
+              "type": "integer"
+            },
+            "title": "Entry Ids",
+            "type": "array"
+          }
+        },
+        "required": [
+          "entry_ids"
+        ],
+        "title": "CommitOut",
+        "type": "object"
+      },
+      "CompleteOut": {
+        "properties": {
+          "item_id": {
+            "title": "Item Id",
+            "type": "integer"
+          },
+          "media_id": {
+            "title": "Media Id",
+            "type": "integer"
+          },
+          "sha256": {
+            "title": "Sha256",
+            "type": "string"
+          },
+          "size": {
+            "title": "Size",
+            "type": "integer"
+          },
+          "skipped": {
+            "title": "Skipped",
+            "type": "string"
+          },
+          "upload_id": {
+            "format": "uuid",
+            "title": "Upload Id",
+            "type": "string"
+          }
+        },
+        "title": "CompleteOut",
+        "type": "object"
+      },
+      "CurrentChapterIn": {
+        "properties": {
+          "chapter_id": {
+            "title": "Chapter Id",
+            "type": "integer"
+          }
+        },
+        "title": "CurrentChapterIn",
+        "type": "object"
+      },
+      "EntryIn": {
+        "properties": {
+          "body": {
+            "default": "",
+            "description": "Markdown.",
+            "title": "Body",
+            "type": "string"
+          },
+          "chapter_id": {
+            "description": "Default: the trip's current chapter.",
+            "title": "Chapter Id",
+            "type": "integer"
+          },
+          "client_id": {
+            "description": "Makes retries safe: the same id returns the same entry.",
+            "format": "uuid",
+            "title": "Client Id",
+            "type": "string"
+          },
+          "is_public": {
+            "default": true,
+            "title": "Is Public",
+            "type": "boolean"
+          },
+          "latitude": {
+            "title": "Latitude",
+            "type": "number"
+          },
+          "longitude": {
+            "title": "Longitude",
+            "type": "number"
+          },
+          "occurred_at": {
+            "description": "When it happened (default: now). Include the UTC offset.",
+            "format": "date-time",
+            "title": "Occurred At",
+            "type": "string"
+          },
+          "place_name": {
+            "default": "",
+            "maxLength": 200,
+            "title": "Place Name",
+            "type": "string"
+          },
+          "upload_ids": {
+            "default": [],
+            "description": "Completed detached uploads to attach, in order.",
+            "items": {
+              "format": "uuid",
+              "type": "string"
+            },
+            "title": "Upload Ids",
+            "type": "array"
+          }
+        },
+        "title": "EntryIn",
+        "type": "object"
+      },
+      "EntryOut": {
+        "properties": {
+          "author": {
+            "$ref": "#/components/schemas/PersonOut"
+          },
+          "body": {
+            "title": "Body",
+            "type": "string"
+          },
+          "body_html": {
+            "title": "Body Html",
+            "type": "string"
+          },
+          "chapter_id": {
+            "title": "Chapter Id",
+            "type": "integer"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "is_public": {
+            "title": "Is Public",
+            "type": "boolean"
+          },
+          "latitude": {
+            "title": "Latitude",
+            "type": "number"
+          },
+          "longitude": {
+            "title": "Longitude",
+            "type": "number"
+          },
+          "media": {
+            "items": {
+              "$ref": "#/components/schemas/MediaOut"
+            },
+            "title": "Media",
+            "type": "array"
+          },
+          "occurred_at": {
+            "format": "date-time",
+            "title": "Occurred At",
+            "type": "string"
+          },
+          "place_name": {
+            "title": "Place Name",
+            "type": "string"
+          },
+          "source": {
+            "title": "Source",
+            "type": "string"
+          },
+          "trip_id": {
+            "title": "Trip Id",
+            "type": "integer"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "title": "Updated At",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "trip_id",
+          "author",
+          "occurred_at",
+          "body",
+          "body_html",
+          "place_name",
+          "is_public",
+          "source",
+          "media",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "EntryOut",
+        "type": "object"
+      },
+      "EntryPage": {
+        "properties": {
+          "deleted": {
+            "default": [],
+            "items": {
+              "type": "integer"
+            },
+            "title": "Deleted",
+            "type": "array"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/EntryOut"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "next_cursor": {
+            "title": "Next Cursor",
+            "type": "string"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "title": "EntryPage",
+        "type": "object"
+      },
+      "EntryPatch": {
+        "properties": {
+          "body": {
+            "title": "Body",
+            "type": "string"
+          },
+          "chapter_id": {
+            "title": "Chapter Id",
+            "type": "integer"
+          },
+          "is_public": {
+            "title": "Is Public",
+            "type": "boolean"
+          },
+          "latitude": {
+            "title": "Latitude",
+            "type": "number"
+          },
+          "longitude": {
+            "title": "Longitude",
+            "type": "number"
+          },
+          "occurred_at": {
+            "format": "date-time",
+            "title": "Occurred At",
+            "type": "string"
+          },
+          "place_name": {
+            "maxLength": 200,
+            "title": "Place Name",
+            "type": "string"
+          },
+          "upload_ids": {
+            "default": [],
+            "description": "More uploads to attach.",
+            "items": {
+              "format": "uuid",
+              "type": "string"
+            },
+            "title": "Upload Ids",
+            "type": "array"
+          }
+        },
+        "title": "EntryPatch",
+        "type": "object"
+      },
+      "ErrorBody": {
+        "properties": {
+          "code": {
+            "title": "Code",
+            "type": "string"
+          },
+          "fields": {
+            "additionalProperties": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "title": "Fields",
+            "type": "object"
+          },
+          "message": {
+            "title": "Message",
+            "type": "string"
+          },
+          "received": {
+            "title": "Received",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "code",
+          "message"
+        ],
+        "title": "ErrorBody",
+        "type": "object"
+      },
+      "ErrorOut": {
+        "description": "Every API error has this shape (api/errors.py).",
+        "properties": {
+          "error": {
+            "$ref": "#/components/schemas/ErrorBody"
+          }
+        },
+        "required": [
+          "error"
+        ],
+        "title": "ErrorOut",
+        "type": "object"
+      },
+      "HashesIn": {
+        "properties": {
+          "sha256": {
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 5000,
+            "title": "Sha256",
+            "type": "array"
+          },
+          "trip_id": {
+            "title": "Trip Id",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "sha256"
+        ],
+        "title": "HashesIn",
+        "type": "object"
+      },
+      "HashesOut": {
+        "properties": {
+          "existing": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Existing",
+            "type": "array"
+          }
+        },
+        "required": [
+          "existing"
+        ],
+        "title": "HashesOut",
+        "type": "object"
+      },
+      "HealthOut": {
+        "properties": {
+          "api_version": {
+            "title": "Api Version",
+            "type": "string"
+          },
+          "server_time": {
+            "title": "Server Time",
+            "type": "string"
+          }
+        },
+        "required": [
+          "api_version",
+          "server_time"
+        ],
+        "title": "HealthOut",
+        "type": "object"
+      },
+      "ImportIn": {
+        "properties": {
+          "client_id": {
+            "format": "uuid",
+            "title": "Client Id",
+            "type": "string"
+          }
+        },
+        "title": "ImportIn",
+        "type": "object"
+      },
+      "ImportOut": {
+        "properties": {
+          "entry_ids": {
+            "items": {
+              "type": "integer"
+            },
+            "title": "Entry Ids",
+            "type": "array"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/ItemOut"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "proposed_entries": {
+            "items": {
+              "$ref": "#/components/schemas/ProposedEntry"
+            },
+            "title": "Proposed Entries",
+            "type": "array"
+          },
+          "review_url": {
+            "title": "Review Url",
+            "type": "string"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "trip_id": {
+            "title": "Trip Id",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "status",
+          "items",
+          "proposed_entries",
+          "entry_ids"
+        ],
+        "title": "ImportOut",
+        "type": "object"
+      },
+      "ItemOut": {
+        "properties": {
+          "camera": {
+            "title": "Camera",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "kind": {
+            "title": "Kind",
+            "type": "string"
+          },
+          "latitude": {
+            "title": "Latitude",
+            "type": "number"
+          },
+          "longitude": {
+            "title": "Longitude",
+            "type": "number"
+          },
+          "original_name": {
+            "title": "Original Name",
+            "type": "string"
+          },
+          "sha256": {
+            "title": "Sha256",
+            "type": "string"
+          },
+          "size_bytes": {
+            "title": "Size Bytes",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "original_name",
+          "kind",
+          "sha256",
+          "size_bytes",
+          "camera"
+        ],
+        "title": "ItemOut",
+        "type": "object"
+      },
+      "LatestOut": {
+        "properties": {
+          "latitude": {
+            "title": "Latitude",
+            "type": "number"
+          },
+          "longitude": {
+            "title": "Longitude",
+            "type": "number"
+          },
+          "recorded_at": {
+            "format": "date-time",
+            "title": "Recorded At",
+            "type": "string"
+          }
+        },
+        "required": [
+          "recorded_at",
+          "latitude",
+          "longitude"
+        ],
+        "title": "LatestOut",
+        "type": "object"
+      },
+      "LiveOut": {
+        "properties": {
+          "as_of": {
+            "format": "date-time",
+            "title": "As Of",
+            "type": "string"
+          },
+          "delay_minutes": {
+            "title": "Delay Minutes",
+            "type": "integer"
+          },
+          "rounding_m": {
+            "title": "Rounding M",
+            "type": "integer"
+          },
+          "travellers": {
+            "items": {
+              "$ref": "#/components/schemas/TravellerOut"
+            },
+            "title": "Travellers",
+            "type": "array"
+          }
+        },
+        "required": [
+          "as_of",
+          "delay_minutes",
+          "rounding_m",
+          "travellers"
+        ],
+        "title": "LiveOut",
+        "type": "object"
+      },
+      "MeIn": {
+        "properties": {
+          "first_name": {
+            "title": "First Name",
+            "type": "string"
+          },
+          "last_name": {
+            "title": "Last Name",
+            "type": "string"
+          }
+        },
+        "title": "MeIn",
+        "type": "object"
+      },
+      "MeOut": {
+        "properties": {
+          "avatar_url": {
+            "title": "Avatar Url",
+            "type": "string"
+          },
+          "email": {
+            "title": "Email",
+            "type": "string"
+          },
+          "first_name": {
+            "title": "First Name",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "last_name": {
+            "title": "Last Name",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "privacy_zones": {
+            "items": {
+              "$ref": "#/components/schemas/PrivacyZoneOut"
+            },
+            "title": "Privacy Zones",
+            "type": "array"
+          },
+          "username": {
+            "title": "Username",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "username",
+          "email",
+          "first_name",
+          "last_name",
+          "name",
+          "privacy_zones"
+        ],
+        "title": "MeOut",
+        "type": "object"
+      },
+      "MediaOut": {
+        "properties": {
+          "duration_seconds": {
+            "title": "Duration Seconds",
+            "type": "number"
+          },
+          "height": {
+            "title": "Height",
+            "type": "integer"
+          },
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "is_travel_copy": {
+            "title": "Is Travel Copy",
+            "type": "boolean"
+          },
+          "kind": {
+            "title": "Kind",
+            "type": "string"
+          },
+          "latitude": {
+            "title": "Latitude",
+            "type": "number"
+          },
+          "longitude": {
+            "title": "Longitude",
+            "type": "number"
+          },
+          "original_name": {
+            "title": "Original Name",
+            "type": "string"
+          },
+          "position": {
+            "title": "Position",
+            "type": "integer"
+          },
+          "sha256": {
+            "title": "Sha256",
+            "type": "string"
+          },
+          "size_bytes": {
+            "title": "Size Bytes",
+            "type": "integer"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "taken_at": {
+            "format": "date-time",
+            "title": "Taken At",
+            "type": "string"
+          },
+          "urls": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "title": "Urls",
+            "type": "object"
+          },
+          "width": {
+            "title": "Width",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "kind",
+          "status",
+          "original_name",
+          "is_travel_copy",
+          "sha256",
+          "size_bytes",
+          "position",
+          "urls"
+        ],
+        "title": "MediaOut",
+        "type": "object"
+      },
+      "MoveIn": {
+        "properties": {
+          "direction": {
+            "enum": [
+              "up",
+              "down"
+            ],
+            "title": "Direction",
+            "type": "string"
+          }
+        },
+        "required": [
+          "direction"
+        ],
+        "title": "MoveIn",
+        "type": "object"
+      },
+      "PersonOut": {
+        "properties": {
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name"
+        ],
+        "title": "PersonOut",
+        "type": "object"
+      },
+      "PointIn": {
+        "properties": {
+          "accuracy_m": {
+            "title": "Accuracy M",
+            "type": "number"
+          },
+          "altitude_m": {
+            "title": "Altitude M",
+            "type": "number"
+          },
+          "latitude": {
+            "title": "Latitude",
+            "type": "number"
+          },
+          "longitude": {
+            "title": "Longitude",
+            "type": "number"
+          },
+          "recorded_at": {
+            "description": "When the phone recorded it; must include a UTC offset.",
+            "format": "date-time",
+            "title": "Recorded At",
+            "type": "string"
+          },
+          "speed_mps": {
+            "title": "Speed Mps",
+            "type": "number"
+          }
+        },
+        "required": [
+          "recorded_at",
+          "latitude",
+          "longitude"
+        ],
+        "title": "PointIn",
+        "type": "object"
+      },
+      "PointOut": {
+        "properties": {
+          "accuracy_m": {
+            "title": "Accuracy M",
+            "type": "number"
+          },
+          "latitude": {
+            "title": "Latitude",
+            "type": "number"
+          },
+          "longitude": {
+            "title": "Longitude",
+            "type": "number"
+          },
+          "recorded_at": {
+            "format": "date-time",
+            "title": "Recorded At",
+            "type": "string"
+          },
+          "user_id": {
+            "title": "User Id",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "recorded_at",
+          "latitude",
+          "longitude",
+          "user_id"
+        ],
+        "title": "PointOut",
+        "type": "object"
+      },
+      "PointsOut": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/PointOut"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "next_cursor": {
+            "title": "Next Cursor",
+            "type": "string"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "title": "PointsOut",
+        "type": "object"
+      },
+      "PrivacyZoneOut": {
+        "properties": {
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "label": {
+            "title": "Label",
+            "type": "string"
+          },
+          "latitude": {
+            "title": "Latitude",
+            "type": "number"
+          },
+          "longitude": {
+            "title": "Longitude",
+            "type": "number"
+          },
+          "radius_m": {
+            "title": "Radius M",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "label",
+          "latitude",
+          "longitude",
+          "radius_m"
+        ],
+        "title": "PrivacyZoneOut",
+        "type": "object"
+      },
+      "ProposedEntry": {
+        "properties": {
+          "end": {
+            "format": "date-time",
+            "title": "End",
+            "type": "string"
+          },
+          "item_ids": {
+            "items": {
+              "type": "integer"
+            },
+            "title": "Item Ids",
+            "type": "array"
+          },
+          "latitude": {
+            "title": "Latitude",
+            "type": "number"
+          },
+          "located_from": {
+            "description": "exif, gpx (GPX tracks or recorded positions), interpolated",
+            "items": {
+              "type": "string"
+            },
+            "title": "Located From",
+            "type": "array"
+          },
+          "longitude": {
+            "title": "Longitude",
+            "type": "number"
+          },
+          "start": {
+            "format": "date-time",
+            "title": "Start",
+            "type": "string"
+          }
+        },
+        "required": [
+          "item_ids",
+          "located_from"
+        ],
+        "title": "ProposedEntry",
+        "type": "object"
+      },
+      "Rejected": {
+        "properties": {
+          "index": {
+            "title": "Index",
+            "type": "integer"
+          },
+          "reason": {
+            "title": "Reason",
+            "type": "string"
+          }
+        },
+        "required": [
+          "index",
+          "reason"
+        ],
+        "title": "Rejected",
+        "type": "object"
+      },
+      "TrackOut": {
+        "properties": {
+          "chapter_id": {
+            "title": "Chapter Id",
+            "type": "integer"
+          },
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "mode": {
+            "title": "Mode",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "mode"
+        ],
+        "title": "TrackOut",
+        "type": "object"
+      },
+      "TravellerOut": {
+        "properties": {
+          "latest": {
+            "$ref": "#/components/schemas/LatestOut"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "path": {
+            "items": {
+              "items": {
+                "type": "number"
+              },
+              "type": "array"
+            },
+            "title": "Path",
+            "type": "array"
+          },
+          "user_id": {
+            "title": "User Id",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "user_id",
+          "name",
+          "latest",
+          "path"
+        ],
+        "title": "TravellerOut",
+        "type": "object"
+      },
+      "TripDetailOut": {
+        "properties": {
+          "chapters": {
+            "items": {
+              "$ref": "#/components/schemas/ChapterOut"
+            },
+            "title": "Chapters",
+            "type": "array"
+          },
+          "companions": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Companions",
+            "type": "array"
+          },
+          "cover_url": {
+            "title": "Cover Url",
+            "type": "string"
+          },
+          "current": {
+            "title": "Current",
+            "type": "boolean"
+          },
+          "current_chapter_id": {
+            "title": "Current Chapter Id",
+            "type": "integer"
+          },
+          "description": {
+            "title": "Description",
+            "type": "string"
+          },
+          "description_html": {
+            "title": "Description Html",
+            "type": "string"
+          },
+          "end_date": {
+            "format": "date",
+            "title": "End Date",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "live_delay_minutes": {
+            "title": "Live Delay Minutes",
+            "type": "integer"
+          },
+          "live_round_m": {
+            "title": "Live Round M",
+            "type": "integer"
+          },
+          "live_share": {
+            "title": "Live Share",
+            "type": "string"
+          },
+          "share_enabled": {
+            "title": "Share Enabled",
+            "type": "boolean"
+          },
+          "share_url": {
+            "title": "Share Url",
+            "type": "string"
+          },
+          "start_date": {
+            "format": "date",
+            "title": "Start Date",
+            "type": "string"
+          },
+          "timezone": {
+            "title": "Timezone",
+            "type": "string"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
+          "travellers": {
+            "items": {
+              "$ref": "#/components/schemas/PersonOut"
+            },
+            "title": "Travellers",
+            "type": "array"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "title": "Updated At",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "start_date",
+          "end_date",
+          "timezone",
+          "description",
+          "current",
+          "updated_at",
+          "description_html",
+          "travellers",
+          "companions",
+          "chapters",
+          "share_enabled",
+          "live_share",
+          "live_delay_minutes",
+          "live_round_m"
+        ],
+        "title": "TripDetailOut",
+        "type": "object"
+      },
+      "TripList": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/TripOut"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "next_cursor": {
+            "title": "Next Cursor",
+            "type": "string"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "title": "TripList",
+        "type": "object"
+      },
+      "TripOut": {
+        "properties": {
+          "cover_url": {
+            "title": "Cover Url",
+            "type": "string"
+          },
+          "current": {
+            "title": "Current",
+            "type": "boolean"
+          },
+          "description": {
+            "title": "Description",
+            "type": "string"
+          },
+          "end_date": {
+            "format": "date",
+            "title": "End Date",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "start_date": {
+            "format": "date",
+            "title": "Start Date",
+            "type": "string"
+          },
+          "timezone": {
+            "title": "Timezone",
+            "type": "string"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "title": "Updated At",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "start_date",
+          "end_date",
+          "timezone",
+          "description",
+          "current",
+          "updated_at"
+        ],
+        "title": "TripOut",
+        "type": "object"
+      },
+      "UploadIn": {
+        "properties": {
+          "batch_id": {
+            "description": "Add to this import when complete.",
+            "format": "uuid",
+            "title": "Batch Id",
+            "type": "string"
+          },
+          "client_id": {
+            "format": "uuid",
+            "title": "Client Id",
+            "type": "string"
+          },
+          "entry_id": {
+            "description": "Attach to this entry when complete.",
+            "title": "Entry Id",
+            "type": "integer"
+          },
+          "filename": {
+            "maxLength": 255,
+            "title": "Filename",
+            "type": "string"
+          },
+          "sha256": {
+            "description": "Checked on completion.",
+            "pattern": "^[0-9a-fA-F]{64}$",
+            "title": "Sha256",
+            "type": "string"
+          },
+          "size": {
+            "exclusiveMinimum": 0,
+            "title": "Size",
+            "type": "integer"
+          },
+          "trip_id": {
+            "description": "Detached upload for this trip; an entry claims it later.",
+            "title": "Trip Id",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "filename",
+          "size"
+        ],
+        "title": "UploadIn",
+        "type": "object"
+      },
+      "UploadOut": {
+        "properties": {
+          "chunk_size": {
+            "title": "Chunk Size",
+            "type": "integer"
+          },
+          "complete": {
+            "title": "Complete",
+            "type": "boolean"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "received": {
+            "title": "Received",
+            "type": "integer"
+          },
+          "size": {
+            "title": "Size",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "received",
+          "size",
+          "chunk_size",
+          "complete"
+        ],
+        "title": "UploadOut",
+        "type": "object"
+      }
+    },
+    "securitySchemes": {
+      "AppTokenAuth": {
+        "in": "header",
+        "name": "X-Session-Token",
+        "type": "apiKey"
+      },
+      "WebSessionAuth": {
+        "in": "cookie",
+        "name": "sessionid",
+        "type": "apiKey"
+      }
+    }
+  },
+  "info": {
+    "description": "API for trips.aquiles.me: the website's JavaScript and the iPhone app.",
+    "title": "Trips API",
+    "version": "1"
+  },
+  "openapi": "3.1.0",
+  "paths": {
+    "/api/v1/chapters/{chapter_id}": {
+      "delete": {
+        "description": "Its entries and tracks are kept, without a chapter.",
+        "operationId": "delete_chapter",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "chapter_id",
+            "required": true,
+            "schema": {
+              "title": "Chapter Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content"
+          }
+        },
+        "security": [
+          {
+            "AppTokenAuth": []
+          },
+          {
+            "WebSessionAuth": []
+          }
+        ],
+        "summary": "Delete Chapter",
+        "tags": [
+          "trips"
+        ]
+      },
+      "patch": {
+        "operationId": "rename_chapter",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "chapter_id",
+            "required": true,
+            "schema": {
+              "title": "Chapter Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChapterPatch"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChapterOut"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "security": [
+          {
+            "AppTokenAuth": []
+          },
+          {
+            "WebSessionAuth": []
+          }
+        ],
+        "summary": "Rename Chapter",
+        "tags": [
+          "trips"
+        ]
+      }
+    },
+    "/api/v1/chapters/{chapter_id}/move": {
+      "post": {
+        "description": "Swap with the neighbour above or below. Returns the trip's chapters in order.",
+        "operationId": "move_chapter",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "chapter_id",
+            "required": true,
+            "schema": {
+              "title": "Chapter Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MoveIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/ChapterOut"
+                  },
+                  "title": "Response",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "security": [
+          {
+            "AppTokenAuth": []
+          },
+          {
+            "WebSessionAuth": []
+          }
+        ],
+        "summary": "Move Chapter",
+        "tags": [
+          "trips"
+        ]
+      }
+    },
+    "/api/v1/entries/{entry_id}": {
+      "delete": {
+        "operationId": "delete_entry",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "entry_id",
+            "required": true,
+            "schema": {
+              "title": "Entry Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content"
+          }
+        },
+        "security": [
+          {
+            "AppTokenAuth": []
+          },
+          {
+            "WebSessionAuth": []
+          }
+        ],
+        "summary": "Delete Entry",
+        "tags": [
+          "trips"
+        ]
+      },
+      "get": {
+        "operationId": "entry_detail",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "entry_id",
+            "required": true,
+            "schema": {
+              "title": "Entry Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EntryOut"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "security": [
+          {
+            "AppTokenAuth": []
+          },
+          {
+            "WebSessionAuth": []
+          }
+        ],
+        "summary": "Entry Detail",
+        "tags": [
+          "trips"
+        ]
+      },
+      "patch": {
+        "description": "Change some fields; fields left out stay as they are.",
+        "operationId": "update_entry",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "entry_id",
+            "required": true,
+            "schema": {
+              "title": "Entry Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EntryPatch"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EntryOut"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "security": [
+          {
+            "AppTokenAuth": []
+          },
+          {
+            "WebSessionAuth": []
+          }
+        ],
+        "summary": "Update Entry",
+        "tags": [
+          "trips"
+        ]
+      }
+    },
+    "/api/v1/health": {
+      "get": {
+        "description": "No login needed. The app compares `server_time` with its own clock.",
+        "operationId": "health",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthOut"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "summary": "Health",
+        "tags": [
+          "meta"
+        ]
+      }
+    },
+    "/api/v1/imports/{batch_id}": {
+      "delete": {
+        "operationId": "discard_import",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "batch_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Batch Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content"
+          }
+        },
+        "security": [
+          {
+            "AppTokenAuth": []
+          },
+          {
+            "WebSessionAuth": []
+          }
+        ],
+        "summary": "Discard Import",
+        "tags": [
+          "imports"
+        ]
+      },
+      "get": {
+        "operationId": "import_detail",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "batch_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Batch Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ImportOut"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "security": [
+          {
+            "AppTokenAuth": []
+          },
+          {
+            "WebSessionAuth": []
+          }
+        ],
+        "summary": "Import Detail",
+        "tags": [
+          "imports"
+        ]
+      }
+    },
+    "/api/v1/imports/{batch_id}/commit": {
+      "post": {
+        "description": "Create the proposed entries. Committing again returns the same entries.",
+        "operationId": "commit_import",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "batch_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Batch Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CommitIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommitOut"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "security": [
+          {
+            "AppTokenAuth": []
+          },
+          {
+            "WebSessionAuth": []
+          }
+        ],
+        "summary": "Commit Import",
+        "tags": [
+          "imports"
+        ]
+      }
+    },
+    "/api/v1/me": {
+      "get": {
+        "description": "The logged-in user.",
+        "operationId": "me",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MeOut"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "security": [
+          {
+            "AppTokenAuth": []
+          },
+          {
+            "WebSessionAuth": []
+          }
+        ],
+        "summary": "Me",
+        "tags": [
+          "me"
+        ]
+      },
+      "patch": {
+        "operationId": "update_me",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MeIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MeOut"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "security": [
+          {
+            "AppTokenAuth": []
+          },
+          {
+            "WebSessionAuth": []
+          }
+        ],
+        "summary": "Update Me",
+        "tags": [
+          "me"
+        ]
+      }
+    },
+    "/api/v1/media/exists": {
+      "post": {
+        "description": "Which of these files (by SHA-256) are already in your trips, so the app can skip them.",
+        "operationId": "media_exists",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/HashesIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HashesOut"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "security": [
+          {
+            "AppTokenAuth": []
+          },
+          {
+            "WebSessionAuth": []
+          }
+        ],
+        "summary": "Media Exists",
+        "tags": [
+          "uploads"
+        ]
+      }
+    },
+    "/api/v1/media/{media_id}/{variant}": {
+      "get": {
+        "description": "The file itself (original or a processed variant), served by nginx after this check.",
+        "operationId": "media_file",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "media_id",
+            "required": true,
+            "schema": {
+              "title": "Media Id",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "path",
+            "name": "variant",
+            "required": true,
+            "schema": {
+              "title": "Variant",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        },
+        "security": [
+          {
+            "AppTokenAuth": []
+          },
+          {
+            "WebSessionAuth": []
+          }
+        ],
+        "summary": "Media File",
+        "tags": [
+          "trips"
+        ]
+      }
+    },
+    "/api/v1/share/{token}/live": {
+      "get": {
+        "description": "Share-link viewers, only when the trip shares live location with the link: delayed and rounded.",
+        "operationId": "share_live",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "token",
+            "required": true,
+            "schema": {
+              "title": "Token",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LiveOut"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "summary": "Share Live",
+        "tags": [
+          "live"
+        ]
+      }
+    },
+    "/api/v1/share/{token}/map": {
+      "get": {
+        "description": "The share page's map: public entries and their photos only, no recorded positions.",
+        "operationId": "share_map",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "token",
+            "required": true,
+            "schema": {
+              "title": "Token",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        },
+        "summary": "Share Map",
+        "tags": [
+          "trips"
+        ]
+      }
+    },
+    "/api/v1/trips": {
+      "get": {
+        "description": "Trips you're a member of, newest first. `current` marks trips happening today.",
+        "operationId": "list_trips",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TripList"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "security": [
+          {
+            "AppTokenAuth": []
+          },
+          {
+            "WebSessionAuth": []
+          }
+        ],
+        "summary": "List Trips",
+        "tags": [
+          "trips"
+        ]
+      }
+    },
+    "/api/v1/trips/{trip_id}": {
+      "get": {
+        "operationId": "trip_detail",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "trip_id",
+            "required": true,
+            "schema": {
+              "title": "Trip Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TripDetailOut"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "security": [
+          {
+            "AppTokenAuth": []
+          },
+          {
+            "WebSessionAuth": []
+          }
+        ],
+        "summary": "Trip Detail",
+        "tags": [
+          "trips"
+        ]
+      }
+    },
+    "/api/v1/trips/{trip_id}/chapters": {
+      "post": {
+        "operationId": "create_chapter",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "trip_id",
+            "required": true,
+            "schema": {
+              "title": "Trip Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChapterIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChapterOut"
+                }
+              }
+            },
+            "description": "Created"
+          }
+        },
+        "security": [
+          {
+            "AppTokenAuth": []
+          },
+          {
+            "WebSessionAuth": []
+          }
+        ],
+        "summary": "Create Chapter",
+        "tags": [
+          "trips"
+        ]
+      }
+    },
+    "/api/v1/trips/{trip_id}/current-chapter": {
+      "put": {
+        "description": "The chapter new posts go into (same as WhatsApp's #chapter). null clears it.",
+        "operationId": "set_current_chapter",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "trip_id",
+            "required": true,
+            "schema": {
+              "title": "Trip Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CurrentChapterIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CurrentChapterIn"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "security": [
+          {
+            "AppTokenAuth": []
+          },
+          {
+            "WebSessionAuth": []
+          }
+        ],
+        "summary": "Set Current Chapter",
+        "tags": [
+          "trips"
+        ]
+      }
+    },
+    "/api/v1/trips/{trip_id}/entries": {
+      "get": {
+        "description": "Entries ordered by last change (oldest first), for incremental sync.\n\nWith `updated_since`, only entries changed after it, plus `deleted`: ids of entries\ndeleted after it.",
+        "operationId": "list_entries",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "trip_id",
+            "required": true,
+            "schema": {
+              "title": "Trip Id",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "updated_since",
+            "required": false,
+            "schema": {
+              "format": "date-time",
+              "title": "Updated Since",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "cursor",
+            "required": false,
+            "schema": {
+              "title": "Cursor",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "title": "Limit",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EntryPage"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "security": [
+          {
+            "AppTokenAuth": []
+          },
+          {
+            "WebSessionAuth": []
+          }
+        ],
+        "summary": "List Entries",
+        "tags": [
+          "trips"
+        ]
+      },
+      "post": {
+        "description": "Post an entry. From the app (token auth) `source` is \"app\". Media: upload first with\n`trip_id` set (detached), then list the upload ids here.",
+        "operationId": "create_entry",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "trip_id",
+            "required": true,
+            "schema": {
+              "title": "Trip Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EntryIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EntryOut"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EntryOut"
+                }
+              }
+            },
+            "description": "Created"
+          }
+        },
+        "security": [
+          {
+            "AppTokenAuth": []
+          },
+          {
+            "WebSessionAuth": []
+          }
+        ],
+        "summary": "Create Entry",
+        "tags": [
+          "trips"
+        ]
+      }
+    },
+    "/api/v1/trips/{trip_id}/imports": {
+      "post": {
+        "description": "Open an import into a trip. Upload files with `batch_id` set, then commit (or review on the web).",
+        "operationId": "start_import",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "trip_id",
+            "required": true,
+            "schema": {
+              "title": "Trip Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ImportIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ImportOut"
+                }
+              }
+            },
+            "description": "Created"
+          }
+        },
+        "security": [
+          {
+            "AppTokenAuth": []
+          },
+          {
+            "WebSessionAuth": []
+          }
+        ],
+        "summary": "Start Import",
+        "tags": [
+          "imports"
+        ]
+      }
+    },
+    "/api/v1/trips/{trip_id}/live": {
+      "get": {
+        "description": "Members: exact latest position and today's path per traveller (privacy zones removed).",
+        "operationId": "trip_live",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "trip_id",
+            "required": true,
+            "schema": {
+              "title": "Trip Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LiveOut"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "security": [
+          {
+            "AppTokenAuth": []
+          },
+          {
+            "WebSessionAuth": []
+          }
+        ],
+        "summary": "Trip Live",
+        "tags": [
+          "live"
+        ]
+      }
+    },
+    "/api/v1/trips/{trip_id}/map": {
+      "get": {
+        "description": "GeoJSON FeatureCollection: GPX tracks, recorded paths, check-ins, the path between them, photos.",
+        "operationId": "trip_map",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "trip_id",
+            "required": true,
+            "schema": {
+              "title": "Trip Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        },
+        "security": [
+          {
+            "AppTokenAuth": []
+          },
+          {
+            "WebSessionAuth": []
+          }
+        ],
+        "summary": "Trip Map",
+        "tags": [
+          "trips"
+        ]
+      }
+    },
+    "/api/v1/trips/{trip_id}/positions": {
+      "get": {
+        "description": "Recorded points in time order. `cursor` is the `recorded_at` of the last point you have.",
+        "operationId": "list_positions",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "trip_id",
+            "required": true,
+            "schema": {
+              "title": "Trip Id",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "user",
+            "required": false,
+            "schema": {
+              "title": "User",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "cursor",
+            "required": false,
+            "schema": {
+              "title": "Cursor",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 1000,
+              "title": "Limit",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PointsOut"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "security": [
+          {
+            "AppTokenAuth": []
+          },
+          {
+            "WebSessionAuth": []
+          }
+        ],
+        "summary": "List Positions",
+        "tags": [
+          "positions"
+        ]
+      },
+      "post": {
+        "description": "Store a batch of recorded points for the caller. Safe to retry: duplicates are ignored.",
+        "operationId": "add_positions",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "trip_id",
+            "required": true,
+            "schema": {
+              "title": "Trip Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BatchIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BatchOut"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "security": [
+          {
+            "AppTokenAuth": []
+          },
+          {
+            "WebSessionAuth": []
+          }
+        ],
+        "summary": "Add Positions",
+        "tags": [
+          "positions"
+        ]
+      }
+    },
+    "/api/v1/trips/{trip_id}/positions.gpx": {
+      "get": {
+        "description": "GPX export of one traveller's recorded positions (default: you), whole trip or one local day.",
+        "operationId": "positions_gpx",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "trip_id",
+            "required": true,
+            "schema": {
+              "title": "Trip Id",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "user",
+            "required": false,
+            "schema": {
+              "title": "User",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "day",
+            "required": false,
+            "schema": {
+              "format": "date",
+              "title": "Day",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "title": "Response",
+                  "type": "string"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "security": [
+          {
+            "AppTokenAuth": []
+          },
+          {
+            "WebSessionAuth": []
+          }
+        ],
+        "summary": "Positions Gpx",
+        "tags": [
+          "positions"
+        ]
+      }
+    },
+    "/api/v1/trips/{trip_id}/tracks": {
+      "post": {
+        "description": "Upload a GPX file (multipart). It's stored verbatim.",
+        "operationId": "create_track",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "trip_id",
+            "required": true,
+            "schema": {
+              "title": "Trip Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "properties": {
+                  "chapter_id": {
+                    "title": "Chapter Id",
+                    "type": "integer"
+                  },
+                  "file": {
+                    "format": "binary",
+                    "title": "File",
+                    "type": "string"
+                  },
+                  "mode": {
+                    "default": "other",
+                    "title": "Mode",
+                    "type": "string"
+                  },
+                  "name": {
+                    "default": "",
+                    "title": "Name",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "file"
+                ],
+                "title": "MultiPartBodyParams",
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TrackOut"
+                }
+              }
+            },
+            "description": "Created"
+          }
+        },
+        "security": [
+          {
+            "AppTokenAuth": []
+          },
+          {
+            "WebSessionAuth": []
+          }
+        ],
+        "summary": "Create Track",
+        "tags": [
+          "trips"
+        ]
+      }
+    },
+    "/api/v1/uploads": {
+      "post": {
+        "description": "Start a chunked upload. Then PUT chunks, then POST complete. Repeating a `client_id`\nreturns the existing upload, so the client can resume from `received`.",
+        "operationId": "start_upload",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UploadIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UploadOut"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UploadOut"
+                }
+              }
+            },
+            "description": "Created"
+          }
+        },
+        "security": [
+          {
+            "AppTokenAuth": []
+          },
+          {
+            "WebSessionAuth": []
+          }
+        ],
+        "summary": "Start Upload",
+        "tags": [
+          "uploads"
+        ]
+      }
+    },
+    "/api/v1/uploads/{upload_id}": {
+      "get": {
+        "operationId": "upload_status",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "upload_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Upload Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UploadOut"
+                }
+              }
+            },
+            "description": "OK"
+          }
+        },
+        "security": [
+          {
+            "AppTokenAuth": []
+          },
+          {
+            "WebSessionAuth": []
+          }
+        ],
+        "summary": "Upload Status",
+        "tags": [
+          "uploads"
+        ]
+      }
+    },
+    "/api/v1/uploads/{upload_id}/chunk": {
+      "put": {
+        "description": "Raw bytes (Content-Type: application/octet-stream) starting at `offset`.\n409 with `received` means: continue from there.",
+        "operationId": "upload_chunk",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "upload_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Upload Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "offset",
+            "required": true,
+            "schema": {
+              "title": "Offset",
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/octet-stream": {
+              "schema": {
+                "format": "binary",
+                "type": "string"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChunkOut"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Conflict"
+          }
+        },
+        "security": [
+          {
+            "AppTokenAuth": []
+          },
+          {
+            "WebSessionAuth": []
+          }
+        ],
+        "summary": "Upload Chunk",
+        "tags": [
+          "uploads"
+        ]
+      }
+    },
+    "/api/v1/uploads/{upload_id}/complete": {
+      "post": {
+        "operationId": "upload_complete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "upload_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Upload Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CompleteOut"
+                }
+              }
+            },
+            "description": "OK"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Unprocessable Content"
+          }
+        },
+        "security": [
+          {
+            "AppTokenAuth": []
+          },
+          {
+            "WebSessionAuth": []
+          }
+        ],
+        "summary": "Upload Complete",
+        "tags": [
+          "uploads"
+        ]
+      }
+    }
+  },
+  "servers": []
+}

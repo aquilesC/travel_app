@@ -9,7 +9,6 @@ urlpatterns = [
     path("trips/<int:pk>/import/", imports.trip_import_start, name="trip_import_start"),
     path("imports/new/", imports.import_new, name="import_new"),
     path("imports/<uuid:batch_id>/", imports.import_upload, name="import_upload"),
-    path("imports/<uuid:batch_id>/uploads/", media.batch_upload_start, name="batch_upload_start"),
     path("imports/<uuid:batch_id>/review/", imports.import_review, name="import_review"),
     path("imports/<uuid:batch_id>/discard/", imports.import_discard, name="import_discard"),
     # Trips
@@ -28,12 +27,6 @@ urlpatterns = [
     path("trips/<int:pk>/entries/new/", views.entry_create, name="entry_create"),
     path("entries/<int:pk>/edit/", views.entry_edit, name="entry_edit"),
     path("entries/<int:pk>/delete/", views.entry_delete, name="entry_delete"),
-    path("entries/<int:pk>/media-status/", media.media_status, name="media_status"),
-    # Chunked uploads
-    path("entries/<int:pk>/uploads/", media.upload_start, name="upload_start"),
-    path("uploads/<uuid:upload_id>/", media.upload_status, name="upload_status"),
-    path("uploads/<uuid:upload_id>/chunk/", media.upload_chunk, name="upload_chunk"),
-    path("uploads/<uuid:upload_id>/complete/", media.upload_complete, name="upload_complete"),
     # Media items
     path("media-items/<int:pk>/delete/", media.media_delete, name="media_delete"),
     path("media-items/<int:pk>/move/<str:direction>/", media.media_move, name="media_move"),

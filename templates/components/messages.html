@@ -1,0 +1,7 @@
+{% if messages %}
+<ul class="m-0 mb-4 flex list-none flex-col gap-2 p-0" role="status">
+  {% for message in messages %}
+  <li class="rounded-md border border-line bg-card px-3 py-2 font-sans text-[15px] {% if message.level_tag == 'error' %}text-danger{% endif %}">{{ message }}</li>
+  {% endfor %}
+</ul>
+{% endif %}

@@ -69,10 +69,10 @@ class GPXTests(MediaRootTestCase):
         track = Track.objects.create(trip=self.trip, mode="sail", gpx_text=make_gpx(100_000),
                                      uploaded_by=self.user)
         started = time.perf_counter()
-        first = self.client.get(f"/trips/{self.trip.pk}/map.json")
+        first = self.client.get(f"/api/v1/trips/{self.trip.pk}/map")
         cold = time.perf_counter() - started
         started = time.perf_counter()
-        second = self.client.get(f"/trips/{self.trip.pk}/map.json")
+        second = self.client.get(f"/api/v1/trips/{self.trip.pk}/map")
         warm = time.perf_counter() - started
         self.assertEqual(first.json(), second.json())
         self.assertLess(cold, 3.0)

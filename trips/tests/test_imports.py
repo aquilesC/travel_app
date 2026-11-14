@@ -44,10 +44,11 @@ class ImportTestCase(MediaRootTestCase):
 
     def upload(self, batch, path):
         data = Path(path).read_bytes()
-        upload_id = self.client.post(f"/imports/{batch.pk}/uploads/", {"filename": Path(path).name, "size": len(data)},
+        upload_id = self.client.post("/api/v1/uploads", {"filename": Path(path).name, "size": len(data),
+                                                         "batch_id": str(batch.pk)},
                                      content_type="application/json").json()["id"]
-        self.client.post(f"/uploads/{upload_id}/chunk/?offset=0", data, content_type="application/octet-stream")
-        return self.client.post(f"/uploads/{upload_id}/complete/").json()
+        self.client.put(f"/api/v1/uploads/{upload_id}/chunk?offset=0", data, content_type="application/octet-stream")
+        return self.client.post(f"/api/v1/uploads/{upload_id}/complete").json()
 
     def add_photo(self, batch, when, **kwargs):
         self.counter += 1

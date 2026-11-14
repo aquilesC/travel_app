@@ -50,11 +50,15 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "django.contrib.humanize",
+    "django.forms",  # lets project templates override Django's form templates
     "django_tasks_db",
     "allauth",
     "allauth.account",
+    "allauth.headless",
+    "allauth.usersessions",
     "accounts",
     "trips",
+    "api",
 ]
 
 MIDDLEWARE = [
@@ -67,6 +71,7 @@ MIDDLEWARE = [
     # Every view needs a login unless marked @login_not_required.
     "django.contrib.auth.middleware.LoginRequiredMiddleware",
     "allauth.account.middleware.AccountMiddleware",
+    "allauth.usersessions.middleware.UserSessionsMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
@@ -145,6 +150,9 @@ LOGIN_URL = "account_login"
 LOGIN_REDIRECT_URL = "/"
 LOGOUT_REDIRECT_URL = "/"
 
+# Forms render through templates/django/forms/ (Tailwind classes, v4 #29).
+FORM_RENDERER = "config.forms.SiteFormRenderer"
+
 # django-allauth: email login, invite-only (no public signup), reset by email link.
 ACCOUNT_ADAPTER = "accounts.adapter.AccountAdapter"
 ACCOUNT_LOGIN_METHODS = {"email"}
@@ -155,6 +163,15 @@ ACCOUNT_LOGOUT_ON_PASSWORD_CHANGE = False
 ACCOUNT_SESSION_REMEMBER = True
 ACCOUNT_EMAIL_SUBJECT_PREFIX = "[Trips] "
 ACCOUNT_DEFAULT_HTTP_PROTOCOL = "https"
+
+# allauth headless, for the iPhone app only (v4 #22). The website keeps the normal
+# allauth pages; the app logs in at /_allauth/app/v1/auth/login and sends the
+# returned session token as X-Session-Token to /api/v1/.
+HEADLESS_ONLY = False
+HEADLESS_CLIENTS = ("app",)
+HEADLESS_SERVE_SPECIFICATION = False
+# Signed-in browsers and phones are listed at /accounts/sessions/, where they can be signed out.
+USERSESSIONS_TRACK_ACTIVITY = True
 
 
 # Internationalization

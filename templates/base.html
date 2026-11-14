@@ -6,7 +6,8 @@
   {% block meta %}{% endblock %}
   <title>{% block title %}Trips{% endblock %}</title>
   <link rel="icon" href="{% static 'img/compass.svg' %}" type="image/svg+xml">
-  <link rel="stylesheet" href="{% static 'css/app.css' %}">
+  <link rel="stylesheet" href="{% static 'css/legacy.css' %}">
+  <link rel="stylesheet" href="{% static 'css/tailwind.css' %}">
   {% block head %}{% endblock %}
 </head>
 <body class="{% block body_class %}{% endblock %}">
@@ -23,9 +24,7 @@
     </nav>
   </header>
   <main class="{% block main_class %}{% endblock %}">
-    {% if messages %}
-    <ul class="messages">{% for message in messages %}<li class="{{ message.tags }}">{{ message }}</li>{% endfor %}</ul>
-    {% endif %}
+    {% include "components/messages.html" %}
     {% block content %}{% endblock %}
   </main>
   {% block scripts %}{% endblock %}

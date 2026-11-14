@@ -1,5 +1,6 @@
-// Chunked, resumable uploads: Cloudflare rejects requests over 100 MB, so files
-// go up in pieces of at most `chunk_size` bytes (50 MB) and are joined server-side.
+// Chunked, resumable uploads through the API (/api/v1/uploads): Cloudflare rejects
+// requests over 100 MB, so files go up in pieces of at most `chunk_size` bytes (50 MB)
+// and are joined server-side. `data-target` says where they go: {"entry_id"} or {"batch_id"}.
 (function () {
   const box = document.getElementById("uploader");
   if (!box) return;
@@ -14,16 +15,18 @@
       headers: { "X-CSRFToken": csrf, ...(options.headers || {}) },
     });
     const data = await response.json().catch(() => ({}));
-    return { ok: response.ok, status: response.status, data };
+    const error = data.error || {};
+    return { ok: response.ok, status: response.status, data, message: error.message, received: error.received };
   }
 
   async function uploadFile(file, row) {
-    const start = await call(box.dataset.startUrl, {
+    const target = JSON.parse(box.dataset.target || "{}");
+    const start = await call("/api/v1/uploads", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ filename: file.name, size: file.size }),
+      body: JSON.stringify({ filename: file.name, size: file.size, ...target }),
     });
-    if (!start.ok) throw new Error(start.data.error || "Could not start the upload");
+    if (!start.ok) throw new Error(start.message || "Could not start the upload");
     const { id, chunk_size: chunkSize } = start.data;
     let offset = 0;
     let failures = 0;
@@ -31,8 +34,8 @@
       const chunk = file.slice(offset, offset + chunkSize);
       let result;
       try {
-        result = await call(`/uploads/${id}/chunk/?offset=${offset}`, {
-          method: "POST",
+        result = await call(`/api/v1/uploads/${id}/chunk?offset=${offset}`, {
+          method: "PUT",
           headers: { "Content-Type": "application/octet-stream" },
           body: chunk,
         });
@@ -42,18 +45,18 @@
       if (result.ok) {
         offset = result.data.received;
         failures = 0;
-      } else if (result.status === 409 && typeof result.data.received === "number") {
-        offset = result.data.received; // server tells us where to resume
+      } else if (result.status === 409 && typeof result.received === "number") {
+        offset = result.received; // server tells us where to resume
       } else {
-        if (++failures > 5) throw new Error(result.data.error || "Upload failed");
+        if (++failures > 5) throw new Error(result.message || "Upload failed");
         await new Promise((r) => setTimeout(r, 2000 * failures));
-        const status = await call(`/uploads/${id}/`).catch(() => null);
+        const status = await call(`/api/v1/uploads/${id}`).catch(() => null);
         if (status && status.ok) offset = status.data.received;
       }
       row.textContent = `${file.name}: ${Math.floor((offset / file.size) * 100)}%`;
     }
-    const done = await call(`/uploads/${id}/complete/`, { method: "POST" });
-    if (!done.ok) throw new Error(done.data.error || "Could not finish the upload");
+    const done = await call(`/api/v1/uploads/${id}/complete`, { method: "POST" });
+    if (!done.ok) throw new Error(done.message || "Could not finish the upload");
     return done.data;
   }
 

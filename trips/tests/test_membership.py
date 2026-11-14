@@ -30,8 +30,8 @@ class MembershipTests(MediaRootTestCase):
         no_claim=admin access (staff see everything there by design)."""
         self.client.force_login(self.other_user)
         t, e, m = self.trip.pk, self.entry.pk, self.media.pk
-        gets = [f"/trips/{t}/", f"/trips/{t}/edit/", f"/trips/{t}/map.json", f"/trips/{t}/entries/new/",
-                f"/entries/{e}/edit/", f"/entries/{e}/delete/", f"/entries/{e}/media-status/",
+        gets = [f"/trips/{t}/", f"/trips/{t}/edit/", f"/api/v1/trips/{t}/map", f"/trips/{t}/entries/new/",
+                f"/entries/{e}/edit/", f"/entries/{e}/delete/", f"/api/v1/entries/{e}", f"/api/v1/media/{m}/md",
                 f"/m/{m}/md/", f"/chapters/{self.chapter.pk}/edit/", f"/tracks/{self.track.pk}/edit/",
                 f"/imports/{self.batch.pk}/review/"]
         for url in gets:
@@ -40,7 +40,7 @@ class MembershipTests(MediaRootTestCase):
                  f"/chapters/{self.chapter.pk}/move/up/", f"/trips/{t}/share/regenerate/"]
         for url in posts:
             self.assertEqual(self.client.post(url, {"title": "x"}).status_code, 404, url)
-        response = self.client.post(f"/entries/{e}/uploads/", {"filename": "a.jpg", "size": 3},
+        response = self.client.post("/api/v1/uploads", {"filename": "a.jpg", "size": 3, "entry_id": e},
                                     content_type="application/json")
         self.assertEqual(response.status_code, 404)
         self.assertNotContains(self.client.get("/"), "Sri Lanka")
@@ -121,11 +121,12 @@ class ReaderDataTests(MediaRootTestCase):
         fails_when=the share map leaks a private photo or gives member-only thumbnail URLs;
         no_claim=map rendering in the browser."""
         self.client.force_login(self.user)
-        member = self.client.get(f"/trips/{self.trip.pk}/map.json").json()["features"]
+        member = self.client.get(f"/api/v1/trips/{self.trip.pk}/map").json()["features"]
         thumbs = {f["properties"]["media_id"]: f["properties"]["thumb"] for f in member if f["properties"]["kind"] == "photo"}
-        self.assertEqual(thumbs, {self.photo.pk: f"/m/{self.photo.pk}/sm/", self.secret.pk: f"/m/{self.secret.pk}/sm/"})
+        self.assertEqual(thumbs, {self.photo.pk: f"/api/v1/media/{self.photo.pk}/sm",
+                                  self.secret.pk: f"/api/v1/media/{self.secret.pk}/sm"})
         self.client.logout()
-        shared = self.client.get(f"/s/{self.trip.share_token}/map.json").json()["features"]
+        shared = self.client.get(f"/api/v1/share/{self.trip.share_token}/map").json()["features"]
         thumbs = {f["properties"]["media_id"]: f["properties"]["thumb"] for f in shared if f["properties"]["kind"] == "photo"}
         self.assertEqual(thumbs, {self.photo.pk: f"/s/{self.trip.share_token}/m/{self.photo.pk}/sm/"})
         self.assertEqual(self.client.get(thumbs[self.photo.pk]).status_code, 200)

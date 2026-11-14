@@ -81,6 +81,10 @@ def map_data(trip, public_only, media_url=None):
     """GeoJSON for the trip map: tracks, entry check-ins, the path between them, and
     every located photo (with a thumbnail URL from `media_url(media, variant)`)."""
     features = [track_feature(t) for t in trip.tracks.all()]
+    if not public_only:  # the share page gets positions only through the live view (v4 #27)
+        from .services.positions import path_features
+
+        features += path_features(trip)
 
     entries = trip.entries.prefetch_related("media")
     if public_only:

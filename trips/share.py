@@ -1,8 +1,8 @@
 """Public, anonymous pages: the trip share link and email subscriptions."""
 
 from django.contrib.auth.decorators import login_not_required
-from django.http import Http404, JsonResponse
-from django.shortcuts import get_object_or_404, render
+from django.http import Http404
+from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt
@@ -38,11 +38,8 @@ def share_trip(request, token):
 @login_not_required
 @require_GET
 def share_map_data(request, token):
-    from .gpx import map_data
-
-    return JsonResponse(map_data(
-        shared_trip(token), public_only=True,
-        media_url=lambda m, v: reverse("share_media", args=[token, m.pk, v])))
+    """Moved to the API (v4 #23). Kept as a redirect for one release."""
+    return redirect(reverse("api-v1:share_map", kwargs={"token": token}), permanent=True)
 
 
 @login_not_required

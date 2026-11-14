@@ -17,3 +17,12 @@ db.sqlite3
 .vscode/
 .DS_Store
 *.swp
+
+# Built by Tailwind (Dockerfile css stage / compose "tailwind" service)
+static/css/tailwind.css
+
+# iOS
+ios/Local.xcconfig
+ios/Trips.xcodeproj/
+ios/TripsKit/.build/
+ios/TripsKit/.swiftpm/

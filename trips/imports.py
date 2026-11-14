@@ -4,45 +4,34 @@ from collections import Counter
 from zoneinfo import ZoneInfo
 
 from django.contrib import messages
-from django.http import Http404
-from django.shortcuts import get_object_or_404, redirect, render
+from django.shortcuts import redirect, render
 from django.views.decorators.http import require_POST
 
 from . import importing
 from .access import get_trip
 from .forms import ImportForm, TripFromGPXForm
-from .models import ImportBatch, Trip
+from .services import imports as import_service
 
 
 @require_POST
 def trip_import_start(request, pk):
-    trip = get_trip(request.user, pk)
-    batch = ImportBatch.objects.create(trip=trip, created_by=request.user)
+    batch = import_service.start_import(request.user, get_trip(request.user, pk))
     return redirect("import_upload", batch_id=batch.pk)
 
 
 @require_POST
 def import_new(request):
-    batch = ImportBatch.objects.create(created_by=request.user)
+    batch = import_service.start_import(request.user)
     return redirect("import_upload", batch_id=batch.pk)
 
 
-def open_batch(user, batch_id):
-    """An open import the user started (and, for a trip import, is still a member of)."""
-    batch = get_object_or_404(ImportBatch.objects.select_related("trip"), pk=batch_id,
-                              status=ImportBatch.OPEN, created_by=user)
-    if batch.trip_id and not batch.trip.travellers.filter(pk=user.pk).exists():
-        raise Http404
-    return batch
-
-
 def import_upload(request, batch_id):
-    batch = open_batch(request.user, batch_id)
+    batch = import_service.open_batch(request.user, batch_id)
     return render(request, "trips/import_upload.html", {"batch": batch, "count": batch.items.count()})
 
 
 def _summary(batch, items, tz, shifts):
-    series = importing.track_series(batch.trip.tracks.all()) if batch.trip_id else []
+    series = importing.location_series(batch.trip, batch.created_by) if batch.trip_id else []
     dated, undated = importing.build_points(items, tz, shifts, series)
     groups = importing.group_points(dated) + ([undated] if undated else [])
     start, end = importing.date_range(items, tz, shifts)
@@ -56,7 +45,7 @@ def _summary(batch, items, tz, shifts):
 
 
 def import_review(request, batch_id):
-    batch = open_batch(request.user, batch_id)
+    batch = import_service.open_batch(request.user, batch_id)
     items = list(batch.items.all())
     if not items:
         messages.error(request, "Upload some photos first.")
@@ -74,14 +63,15 @@ def import_review(request, batch_id):
         tz_name = data.get("timezone") or tz_name
         if "create" in request.POST:
             if batch.trip_id:
-                entries = importing.create_entries(batch, batch.trip, shifts, data["make_public"],
-                                                   request.user)
+                entries = import_service.commit_into_trip(request.user, batch, shifts=shifts,
+                                                          make_public=data["make_public"])
                 trip = batch.trip
             else:
-                trip = importing.create_trip_from_batch(
-                    batch, title=data["title"], tz_name=tz_name, travellers=data["travellers"],
+                trip = import_service.commit_as_new_trip(
+                    request.user, batch, title=data["title"], tz_name=tz_name,
+                    travellers=data["travellers"],
                     gpx_texts=[(importing.gpx_name(text, name), text) for name, text in data["gpx_files"]],
-                    shifts=shifts, make_public=data["make_public"], author=request.user,
+                    shifts=shifts, make_public=data["make_public"],
                 )
                 entries = trip.entries.all()
             messages.success(request, f"Added {len(items)} files in {len(entries)} entries. "
@@ -96,9 +86,9 @@ def import_review(request, batch_id):
 
 @require_POST
 def import_discard(request, batch_id):
-    batch = open_batch(request.user, batch_id)
+    batch = import_service.open_batch(request.user, batch_id)
     trip = batch.trip
-    importing.discard_batch(batch)
+    import_service.discard(request.user, batch)
     messages.success(request, "Import discarded.")
     return redirect(trip) if trip else redirect("home")
 
@@ -107,10 +97,10 @@ def trip_from_gpx(request):
     form = TripFromGPXForm(request.POST or None, request.FILES or None, user=request.user)
     if request.method == "POST" and form.is_valid():
         data = form.cleaned_data
-        trip = importing.create_trip_from_gpx(
-            files=data["gpx_files"], tz_name=data["timezone"], mode=data["mode"], title=data["title"],
-            start_date=data["start_date"], end_date=data["end_date"], travellers=data["travellers"],
-            author=request.user,
+        trip = import_service.trip_from_gpx(
+            request.user, files=data["gpx_files"], tz_name=data["timezone"], mode=data["mode"],
+            title=data["title"], start_date=data["start_date"], end_date=data["end_date"],
+            travellers=data["travellers"],
         )
         messages.success(request, f"Trip created with {trip.tracks.count()} track(s).")
         return redirect(trip)

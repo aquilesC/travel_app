@@ -38,6 +38,23 @@ git pull
 docker compose up -d --build
 ```
 
+## Styles (Tailwind)
+
+Templates use [Tailwind](https://tailwindcss.com) v4 through its standalone CLI, so there is no
+Node anywhere. The source is `static/src/app.css`; the Docker build compiles it into
+`static/css/tailwind.css` (git-ignored). While editing templates, keep it rebuilt with:
+
+```sh
+docker compose --profile dev up tailwind
+```
+
+`static/css/legacy.css` holds the pre-Tailwind styles until every page is migrated (v4 #30).
+
+## API
+
+`/api/v1/` serves the website's JavaScript and the iPhone app. Conventions, auth and the contract
+file (`api/openapi.json`) are described in [`api/README.md`](api/README.md).
+
 ## Tests
 
 ```sh

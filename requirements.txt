@@ -10,3 +10,5 @@ pillow-heif==1.8.1
 markdown==3.11.3
 nh3==0.3.7
 django-allauth==65.21.1
+django-ninja==1.8.0
+pydantic==2.14.3
