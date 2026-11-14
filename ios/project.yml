@@ -1,0 +1,68 @@
+# Xcode project for the iPhone app. Generate it on a Mac:
+#   brew install xcodegen && cd ios && xcodegen
+# then open Trips.xcodeproj. Your Apple team id goes in ios/Local.xcconfig (not committed):
+#   DEVELOPMENT_TEAM = ABCDE12345
+name: Trips
+options:
+  bundleIdPrefix: me.aquiles
+  deploymentTarget:
+    iOS: "18.0"
+  createIntermediateGroups: true
+configFiles:
+  Debug: Local.xcconfig
+  Release: Local.xcconfig
+packages:
+  TripsKit:
+    path: TripsKit
+settings:
+  base:
+    SWIFT_VERSION: "6.0"
+    SWIFT_STRICT_CONCURRENCY: complete
+    MARKETING_VERSION: "0.1.0"
+    CURRENT_PROJECT_VERSION: "1"
+targets:
+  Trips:
+    type: application
+    platform: iOS
+    deploymentTarget: "18.0"
+    sources:
+      - path: TripsApp/Sources
+      - path: TripsApp/Resources
+    dependencies:
+      - package: TripsKit
+        product: TripsKit
+      - package: TripsKit
+        product: TripsAPI
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: me.aquiles.trips
+        TARGETED_DEVICE_FAMILY: "1"
+        INFOPLIST_FILE: TripsApp/Info.plist
+        CODE_SIGN_STYLE: Automatic
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+      configs:
+        Debug:
+          # A dev server on your LAN, e.g. http://192.168.1.20:8765 (see ios/README.md)
+          TRIPS_SERVER_URL: "https://trips.aquiles.me"
+        Release:
+          TRIPS_SERVER_URL: "https://trips.aquiles.me"
+    info:
+      path: TripsApp/Info.plist
+      properties:
+        CFBundleDisplayName: Trips
+        TripsServerURL: $(TRIPS_SERVER_URL)
+        UILaunchScreen: {}
+        UISupportedInterfaceOrientations: [UIInterfaceOrientationPortrait]
+        UIBackgroundModes: [location, fetch, processing]
+        BGTaskSchedulerPermittedIdentifiers: [me.aquiles.trips.send]
+        NSLocationWhenInUseUsageDescription: >-
+          Trips records where you go during a trip, at the interval you choose, so the journal
+          has your path and your family can follow along.
+        NSLocationAlwaysAndWhenInUseUsageDescription: >-
+          With "Always", Trips can start recording by itself when a trip begins.
+        NSPhotoLibraryUsageDescription: >-
+          Trips shows your photos by day, time and place so you can pick the ones for the journal.
+          Only the photos you pick are uploaded.
+        NSMicrophoneUsageDescription: Trips records voice notes for your journal.
+        NSAppTransportSecurity:
+          NSAllowsLocalNetworking: true
